@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="SuchConfig">
+  <defs>
+    <pattern id="sc-dots" width="10.5" height="10.5" patternUnits="userSpaceOnUse">
+      <circle cx="5.25" cy="5.25" r="0.95" fill="#f2eee7" opacity="0.08" />
+    </pattern>
+    <radialGradient id="sc-bg" cx="50%" cy="46%" r="72%">
+      <stop offset="0%" stop-color="#2a2826" />
+      <stop offset="58%" stop-color="#201f1d" />
+      <stop offset="100%" stop-color="#121110" />
+    </radialGradient>
+    <radialGradient id="sc-mark-glow" cx="50%" cy="44%" r="28%">
+      <stop offset="0%" stop-color="#d9a24e" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#d9a24e" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="sc-leg-cream" x1="30" y1="30" x2="30" y2="84" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#faf6ef" />
+      <stop offset="100%" stop-color="#e6dfd4" />
+    </linearGradient>
+    <linearGradient id="sc-leg-amber" x1="70" y1="30" x2="70" y2="84" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ecc06a" />
+      <stop offset="100%" stop-color="#c89438" />
+    </linearGradient>
+    <linearGradient id="sc-pivot" x1="50" y1="18" x2="50" y2="34" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#f0c878" />
+      <stop offset="100%" stop-color="#c89438" />
+    </linearGradient>
+    <linearGradient id="sc-glass-edge" x1="8%" y1="4%" x2="92%" y2="96%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.72" />
+      <stop offset="18%" stop-color="#ffffff" stop-opacity="0.28" />
+      <stop offset="42%" stop-color="#ffffff" stop-opacity="0.08" />
+      <stop offset="68%" stop-color="#ffffff" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.34" />
+    </linearGradient>
+    <linearGradient id="sc-glass-edge-inner" x1="12%" y1="8%" x2="88%" y2="92%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22" />
+      <stop offset="35%" stop-color="#ffffff" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1" />
+    </linearGradient>
+    <linearGradient id="sc-glass-specular" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.34" />
+      <stop offset="10%" stop-color="#ffffff" stop-opacity="0.1" />
+      <stop offset="28%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+    <filter id="sc-edge-glow" x="-4%" y="-4%" width="108%" height="108%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <g transform="translate(100 100)">
+    <g id="sc-layer-background">
+      <rect width="824" height="824" rx="183" fill="url(#sc-bg)" />
+      <rect width="824" height="824" rx="183" fill="url(#sc-dots)" />
+      <rect width="824" height="824" rx="183" fill="url(#sc-mark-glow)" />
+    </g>
+    <g id="sc-layer-foreground" transform="translate(206 206) scale(4.12)">
+      <path
+        d="M30 86 Q50 74 70 86"
+        stroke="#201f1d"
+        stroke-width="2.2"
+        fill="none"
+        opacity="0.45"
+        stroke-dasharray="3 4"
+      />
+      <line x1="50" y1="30" x2="30" y2="84" stroke="url(#sc-leg-cream)" stroke-width="8" stroke-linecap="round" />
+      <line x1="50" y1="30" x2="70" y2="84" stroke="url(#sc-leg-amber)" stroke-width="8" stroke-linecap="round" />
+      <circle cx="50" cy="26" r="8" fill="url(#sc-pivot)" />
+      <circle cx="30" cy="84" r="3.4" fill="#f2eee7" />
+      <circle cx="70" cy="84" r="3.4" fill="#d9a24e" />
+    </g>
+    <g id="sc-layer-glass-border">
+      <rect width="824" height="824" rx="183" fill="url(#sc-glass-specular)" />
+      <rect
+        x="5"
+        y="5"
+        width="814"
+        height="814"
+        rx="183"
+        fill="none"
+        stroke="url(#sc-glass-edge)"
+        stroke-width="4"
+        filter="url(#sc-edge-glow)"
+        opacity="0.92"
+      />
+      <rect
+        x="16"
+        y="16"
+        width="792"
+        height="792"
+        rx="174"
+        fill="none"
+        stroke="url(#sc-glass-edge-inner)"
+        stroke-width="1.6"
+      />
+      <rect
+        x="27"
+        y="27"
+        width="770"
+        height="770"
+        rx="164"
+        fill="none"
+        stroke="#ffffff"
+        stroke-opacity="0.05"
+        stroke-width="0.8"
+      />
+    </g>
+  </g>
+</svg>

@@ -1,5 +1,5 @@
 <p align="left">
-  <img src="design/sc-desktop/app-icon.svg" alt="SuchConfig" width="128" height="128" />
+  <img src="src-tauri/icons/app-icon.svg" alt="SuchConfig" width="128" height="128" />
 </p>
 
 # SuchConfig

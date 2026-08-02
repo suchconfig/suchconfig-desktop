@@ -10,6 +10,7 @@ Versioning follows [Semantic Versioning](https://semver.org/) with pre-release t
 ### Fixed
 
 - First-run vault unlock: Keychain / Tauri invoke args use camelCase (`keyId`, `wrappedKey`) so store/load matches the Rust command schema
+- README app icon: use `src-tauri/icons/app-icon.svg` (public) instead of denylisted `design/` so GitHub renders it
 
 ### Added
 
