@@ -1,4 +1,4 @@
-# Contributing to SuchConfig Desktop
+# Contributing to SuchConfig
 
 Thanks for helping improve the open-core desktop vault. This repo is the **Community Edition (CE)** surface: Project Vault, Secrets Vault, Trusted Folder, LAN P2P, and Vault Importer.
 

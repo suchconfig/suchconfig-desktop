@@ -1,8 +1,8 @@
-# Local-First Strategy for SuchConfig Desktop
+# Local-First Strategy for SuchConfig
 
 ## Core Philosophy
 
-SuchConfig Desktop is built on a **local-first architecture** where vault data never leaves the machine unless the user explicitly exports or opts into a sync path they control. Inspired by local-first principles, SuchConfig prioritizes user ownership, privacy, and offline capability above all else.
+SuchConfig is built on a **local-first architecture** where vault data never leaves the machine unless the user explicitly exports or opts into a sync path they control. Inspired by local-first principles, SuchConfig prioritizes user ownership, privacy, and offline capability above all else.
 
 Canonical product story: [data-sovereignty.md](../concepts/data-sovereignty.md) · [public-alpha-roadmap.md](../public-alpha-roadmap.md).
 
@@ -18,7 +18,7 @@ Project Vault and Secrets Vault load, save, merge, and index entirely on the use
 
 ### 2. Offline-First Operation
 
-SuchConfig Desktop is fully functional without internet connectivity. Users can:
+SuchConfig is fully functional without internet connectivity. Users can:
 
 - Unlock and edit CRDT-backed vault items offline
 - Import/export encrypted `.suchvault` archives

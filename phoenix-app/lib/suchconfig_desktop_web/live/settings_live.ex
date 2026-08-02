@@ -3,6 +3,7 @@ defmodule SuchConfigDesktopWeb.SettingsLive do
 
   @shortcuts [
     {"Open command palette", "⌘K"},
+    {"Open Settings", "G ,"},
     {"Lock vault", "⌃⇧L"},
     {"New login", "N L"},
     {"New API key", "N A"},
@@ -11,9 +12,12 @@ defmodule SuchConfigDesktopWeb.SettingsLive do
   ]
 
   alias SuchConfigDesktop.TrustedFolder
+  alias SuchConfigDesktop.VaultStorage
   alias SuchConfigDesktopWeb.P2pLanSyncEvents
   alias SuchConfigDesktopWeb.P2pPairingEvents
   alias SuchConfigDesktopWeb.TrustedFolderEvents
+
+  @storage_topic "settings:storage"
 
   def mount(_params, session, socket) do
     vault_unlocked = session["vault_unlocked"] == true
@@ -24,10 +28,11 @@ defmodule SuchConfigDesktopWeb.SettingsLive do
     end
 
     Phoenix.PubSub.subscribe(SuchConfigDesktop.PubSub, "trusted_folder:status")
+    Phoenix.PubSub.subscribe(SuchConfigDesktop.PubSub, @storage_topic)
 
     socket =
       assign(socket,
-        page_title: "Settings - SuchConfig Desktop",
+        page_title: "Settings - SuchConfig",
         vault_unlocked: vault_unlocked,
         vault_session_id: vault_session_id,
         shortcuts: @shortcuts,
@@ -37,7 +42,8 @@ defmodule SuchConfigDesktopWeb.SettingsLive do
         trusted_folder_watcher_running: false,
         trusted_folder_sync_busy: false,
         trusted_folder_last_error: nil,
-        trusted_folder_integrity_message: nil
+        trusted_folder_integrity_message: nil,
+        storage: VaultStorage.summary()
       )
       |> assign(P2pPairingEvents.default_assigns())
       |> assign(P2pLanSyncEvents.default_assigns())
@@ -252,7 +258,11 @@ defmodule SuchConfigDesktopWeb.SettingsLive do
   end
 
   def handle_info(:vault_unlocked, socket) do
-    {:noreply, assign(socket, vault_unlocked: true)}
+    {:noreply, assign(socket, vault_unlocked: true) |> assign_storage()}
+  end
+
+  def handle_info(:refresh_storage_stats, socket) do
+    {:noreply, assign_storage(socket)}
   end
 
   def handle_info(:open_trusted_folder_setup, socket), do: {:noreply, socket}
@@ -266,7 +276,10 @@ defmodule SuchConfigDesktopWeb.SettingsLive do
   def handle_info(:request_unlock, socket), do: {:noreply, socket}
 
   def handle_info({:trusted_folder_status, params}, socket) do
-    {:noreply, TrustedFolderEvents.apply_status_to_settings(socket, params)}
+    {:noreply,
+     socket
+     |> TrustedFolderEvents.apply_status_to_settings(params)
+     |> assign_storage()}
   end
 
   def handle_info({:trusted_folder_sync, _vault}, socket), do: {:noreply, socket}
@@ -684,13 +697,15 @@ defmodule SuchConfigDesktopWeb.SettingsLive do
             </div>
           </div>
         </div>
-        <div class="card">
+        <div class="card" id="settings-storage-card">
           <h4>Storage</h4>
-          <div class="big">42<sup>MB on disk</sup></div>
-          <div class="muted" style="margin-top: 18px; font-size: 13px">
-            11 secure notes · 8 entries · 2 archives. CRDT history retained for <span class="mono">90 days</span>.
+          <div class="big" id="settings-storage-size">
+            {@storage.size_value}<sup>{@storage.size_unit} on disk</sup>
           </div>
-          <button type="button" class="btn sm" style="margin-top: 18px">
+          <div class="muted" style="margin-top: 18px; font-size: 13px" id="settings-storage-breakdown">
+            {@storage.breakdown_label}. CRDT history is stored with each item.
+          </div>
+          <button type="button" class="btn sm" style="margin-top: 18px" disabled title="Coming soon">
             <.sc_icon name="archive" size={12} /> Compact history
           </button>
         </div>
@@ -700,6 +715,8 @@ defmodule SuchConfigDesktopWeb.SettingsLive do
   end
 
   defp sc_icon(assigns), do: SuchConfigDesktopWeb.Sc.Icon.icon(assigns)
+
+  defp assign_storage(socket), do: assign(socket, storage: VaultStorage.summary())
 
   defp trusted_folder_configured?(assigns) do
     TrustedFolder.configured?(assigns[:trusted_folder_path]) or

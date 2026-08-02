@@ -65,7 +65,8 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.Passkey do
 
           case action do
             :save_item -> EntryEvents.save_item(%{}, socket)
-            :new_item -> EntryEvents.new_item(%{}, socket)
+            :new_item -> EntryEvents.new_item_of_type("login", socket)
+            {:new_item, type} when is_binary(type) -> EntryEvents.new_item_of_type(type, socket)
             _ -> {:noreply, socket}
           end
 

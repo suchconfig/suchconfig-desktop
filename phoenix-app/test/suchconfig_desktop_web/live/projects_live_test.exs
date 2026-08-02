@@ -21,6 +21,29 @@ defmodule SuchConfigDesktopWeb.ProjectsLiveTest do
       assert render(view) =~ "New project"
     end
 
+    test "shows lock icons on project cards when vault is locked", %{conn: conn} do
+      folder = project_folder_fixture(%{name: "Locked Card Project"})
+
+      conn = get(conn, ~p"/")
+      session_id = get_session(conn, "vault_session_id")
+      {:ok, view, _html} = live(conn, "/", @live_opts)
+      view |> element("button", "Proceed without unlocking") |> render_click()
+      view |> element("#rail-projects-btn") |> render_click()
+
+      assert has_element?(view, "#project-card-#{folder.id}")
+      assert has_element?(view, "#project-card-lock-#{folder.id}")
+
+      SuchConfigDesktop.VaultSessionRegistry.put(session_id, "unlock-for-lock-icon")
+
+      Phoenix.PubSub.broadcast(
+        SuchConfigDesktop.PubSub,
+        "vault:#{session_id}",
+        :vault_unlocked
+      )
+
+      refute has_element?(view, "#project-card-lock-#{folder.id}")
+    end
+
     test "open_new_folder_modal shows new project modal", %{conn: conn} do
       view = projects_view(conn)
 
@@ -121,6 +144,37 @@ defmodule SuchConfigDesktopWeb.ProjectsLiveTest do
 
       assert has_element?(view, "#projects-page-root")
       refute has_element?(view, "#crumb-projects-btn")
+    end
+
+    test "deleting project from project settings removes it from projects list", %{conn: conn} do
+      folder = project_folder_fixture(%{name: "Delete Me Project"})
+
+      conn = get(conn, ~p"/")
+      session_id = get_session(conn, "vault_session_id")
+      {:ok, view, _html} = live(conn, "/", @live_opts)
+      view |> element("button", "Proceed without unlocking") |> render_click()
+      SuchConfigDesktop.VaultSessionRegistry.put(session_id, "test-unlock-pw")
+
+      Phoenix.PubSub.broadcast(
+        SuchConfigDesktop.PubSub,
+        "vault:#{session_id}",
+        :vault_unlocked
+      )
+
+      view |> element("#rail-projects-btn") |> render_click()
+      assert has_element?(view, "#project-card-#{folder.id}")
+
+      view |> element("#project-card-#{folder.id}") |> render_click()
+      vault = find_live_child(view, "project_vault-#{folder.id}-false")
+      assert vault
+
+      vault |> element("#open-project-settings") |> render_click()
+      vault |> element("#edit-folder-delete") |> render_click()
+      vault |> element("#edit-folder-delete-confirm") |> render_click()
+
+      assert has_element?(view, "#projects-page-root")
+      refute has_element?(view, "#project-card-#{folder.id}")
+      refute render(view) =~ "Delete Me Project"
     end
   end
 end

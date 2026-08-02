@@ -9,6 +9,7 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.ProjectsGrid do
   attr :expanded_projects, :map, default: %{}
   attr :vault_activity_visible, :boolean, default: false
   attr :total_item_count, :integer, default: 0
+  attr :vault_unlocked, :boolean, default: false
 
   def projects_grid(assigns) do
     project_count = length(assigns.project_entries)
@@ -61,7 +62,7 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.ProjectsGrid do
           <div
             :for={entry <- @project_entries}
             id={"project-card-#{entry.folder.id}"}
-            class="ws-card min-w-0 cursor-pointer"
+            class={["ws-card min-w-0 cursor-pointer", !@vault_unlocked && "is-locked"]}
             phx-click="open_project"
             phx-value-id={entry.folder.id}
             role="button"
@@ -77,6 +78,15 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.ProjectsGrid do
                   <span :if={entry.sealed_count > 0}> ·  {entry.sealed_count} sealed</span>
                 </div>
               </div>
+              <span
+                :if={!@vault_unlocked}
+                id={"project-card-lock-#{entry.folder.id}"}
+                class="ws-card-lock"
+                aria-label="Vault locked"
+                title="Vault locked"
+              >
+                <.icon name="lock" size={14} />
+              </span>
             </div>
 
             <div class="tree" style="background: transparent; border: 0; padding: 4px 0 0">

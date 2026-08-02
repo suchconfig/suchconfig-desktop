@@ -15,7 +15,7 @@ defmodule SuchConfigDesktopWeb.DocsLive do
 
     {:ok,
      assign(socket,
-       page_title: "Docs - SuchConfig Desktop",
+       page_title: "Docs - SuchConfig",
        article_id: article_id,
        categories: Catalog.categories()
      )}

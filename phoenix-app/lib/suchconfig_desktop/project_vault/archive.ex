@@ -89,7 +89,7 @@ defmodule SuchConfigDesktop.ProjectVault.Archive do
       "format_version" => @format_version,
       "created_at" => DateTime.utc_now() |> DateTime.to_iso8601(),
       "creator" => %{
-        "app" => "SuchConfig Desktop",
+        "app" => "SuchConfig",
         "version" => app_version()
       },
       "contents" => %{

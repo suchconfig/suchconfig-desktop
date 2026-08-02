@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security report
-    url: https://github.com/suchconfig/suchconfig-desktop/blob/main/SECURITY.md
+    url: https://github.com/suchconfig/suchconfig-app/blob/main/SECURITY.md
     about: Do not file vulnerabilities as public issues — see SECURITY.md
   - name: Documentation index
-    url: https://github.com/suchconfig/suchconfig-desktop/blob/main/docs/README.md
+    url: https://github.com/suchconfig/suchconfig-app/blob/main/docs/README.md
     about: Start here for public product docs

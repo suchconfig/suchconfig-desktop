@@ -7,7 +7,7 @@ defmodule SuchConfigDesktopWeb.AboutLive do
 
     {:ok,
      assign(socket,
-       page_title: "About - SuchConfig Desktop",
+       page_title: "About - SuchConfig",
        version: version,
        version_major: major,
        platform_label: platform_label()

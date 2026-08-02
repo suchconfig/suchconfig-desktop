@@ -8,20 +8,18 @@ defmodule SuchConfigDesktopWeb.Sc.CommandPalette do
   alias SuchConfigDesktopWeb.Sc.CommandPalette.Commands
 
   attr :open, :boolean, default: false
-  attr :query, :string, default: ""
   attr :cursor, :integer, default: 0
   attr :secrets_vault_enabled, :boolean, default: true
   attr :id, :string, default: "command-palette"
 
   def command_palette(assigns) do
     groups = Commands.groups(assigns.secrets_vault_enabled)
-    filtered = Commands.filter(groups, assigns.query)
-    flat = Commands.flat_items(filtered)
+    flat = Commands.flat_items(groups)
     cursor = min(max(assigns.cursor, 0), max(length(flat) - 1, 0))
 
     assigns =
       assigns
-      |> assign(:filtered_groups, filtered)
+      |> assign(:groups, groups)
       |> assign(:flat_items, flat)
       |> assign(:cursor, cursor)
 
@@ -34,46 +32,41 @@ defmodule SuchConfigDesktopWeb.Sc.CommandPalette do
         aria-label="Close"
         tabindex="-1"
       />
-      <div class="palette" role="dialog" aria-modal="true" aria-label="Command palette">
-        <div class="palette-search">
+      <div
+        class="palette"
+        id="command-palette-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command palette"
+        tabindex="0"
+      >
+        <div class="palette-head">
           <.icon name="sparkle" size={16} style="color: var(--accent)" />
-          <input
-            id="command-palette-input"
-            type="text"
-            name="q"
-            value={@query}
-            placeholder="what would you like to do?"
-            phx-change="command_palette_query"
-            phx-debounce="80"
-            autocomplete="off"
-            spellcheck="false"
-          />
+          <span class="palette-head-title">Commands</span>
           <span class="kbd">esc</span>
         </div>
-        <div class="palette-list" id="command-palette-list">
-          <%= if @filtered_groups == [] do %>
-            <div class="palette-empty">no results — try a different verb</div>
-          <% else %>
-            <%= for {group, group_idx} <- Enum.with_index(@filtered_groups) do %>
-              <div class="palette-group">{group.group}</div>
-              <%= for {item, item_idx} <- Enum.with_index(group.items) do %>
-                <% flat_idx = flat_index(@filtered_groups, group_idx, item_idx) %>
-                <button
-                  type="button"
-                  id={"command-palette-item-#{item.id}"}
-                  class={["palette-item", flat_idx == @cursor && "cursor"]}
-                  phx-click="command_palette_action"
-                  phx-value-id={item.id}
-                  phx-mouseenter="command_palette_hover"
-                  phx-value-index={flat_idx}
-                >
-                  <span class="palette-item-icon">
-                    <.icon name={item.icon} size={15} />
-                  </span>
-                  <span>{item.label}</span>
-                  <span :if={item.hint != ""} class="hint mono">{item.hint}</span>
-                </button>
-              <% end %>
+        <div class="palette-list" id="command-palette-list" role="listbox">
+          <%= for {group, group_idx} <- Enum.with_index(@groups) do %>
+            <div class="palette-group">{group.group}</div>
+            <%= for {item, item_idx} <- Enum.with_index(group.items) do %>
+              <% flat_idx = flat_index(@groups, group_idx, item_idx) %>
+              <button
+                type="button"
+                id={"command-palette-item-#{item.id}"}
+                role="option"
+                aria-selected={flat_idx == @cursor}
+                class={["palette-item", flat_idx == @cursor && "is-selected"]}
+                phx-click="command_palette_action"
+                phx-value-id={item.id}
+                phx-mouseenter="command_palette_hover"
+                phx-value-index={flat_idx}
+              >
+                <span class="palette-item-icon">
+                  <.icon name={item.icon} size={15} />
+                </span>
+                <span>{item.label}</span>
+                <span :if={item.hint != ""} class="hint mono">{item.hint}</span>
+              </button>
             <% end %>
           <% end %>
         </div>

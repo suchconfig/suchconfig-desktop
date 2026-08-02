@@ -11,7 +11,7 @@ Report issues against the latest Public Alpha release when possible.
 
 ## Product security posture
 
-SuchConfig Desktop is **local-first**:
+SuchConfig is **local-first**:
 
 - Vault data (SQLite + encrypted Loro snapshots) stays on the device.
 - **Argon2id** unlock + **AES-GCM** item encryption protect data at rest.

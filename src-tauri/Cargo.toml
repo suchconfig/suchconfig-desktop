@@ -1,7 +1,7 @@
 [package]
 name = "suchconfig"
 version = "0.1.1"
-description = "SuchConfig Desktop App - Tauri shell for Phoenix LiveView"
+description = "SuchConfig App - Tauri shell for Phoenix LiveView"
 authors = ["you"]
 edition = "2021"
 default-run = "suchconfig"

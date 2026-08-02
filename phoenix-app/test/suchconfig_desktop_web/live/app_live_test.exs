@@ -235,4 +235,169 @@ defmodule SuchConfigDesktopWeb.AppLiveTest do
       assert has_element?(view, "#link-project-button")
     end
   end
+
+  describe "command palette" do
+    test "opens without search input and lists commands", %{conn: conn} do
+      view = live_with_vault_skipped(conn)
+
+      render_click(view, "open_command_palette")
+      html = render(view)
+
+      assert has_element?(view, "#command-palette")
+      assert has_element?(view, "#command-palette-list")
+      refute has_element?(view, "#command-palette-input")
+      assert html =~ "Open Projects"
+      assert html =~ "Open Settings"
+      assert html =~ "New project"
+      assert html =~ "Password Generator"
+      assert html =~ "New login entry"
+      assert html =~ "Import sealed archive"
+      assert html =~ "N then P"
+      assert html =~ "G then ,"
+      assert has_element?(view, "#command-palette-list .palette-item.is-selected")
+    end
+
+    test "arrow keys move the selected highlight", %{conn: conn} do
+      view = live_with_vault_skipped(conn)
+
+      render_click(view, "open_command_palette")
+
+      first = view |> element("#command-palette-list .palette-item.is-selected") |> render()
+
+      view
+      |> element("#command-palette")
+      |> render_hook("command_palette_key", %{"key" => "ArrowDown"})
+
+      second = view |> element("#command-palette-list .palette-item.is-selected") |> render()
+      refute first == second
+
+      view
+      |> element("#command-palette")
+      |> render_hook("command_palette_key", %{"key" => "ArrowUp"})
+
+      restored = view |> element("#command-palette-list .palette-item.is-selected") |> render()
+      assert restored == first
+    end
+
+    test "Enter runs the highlighted command", %{conn: conn} do
+      view = live_with_vault_skipped(conn)
+
+      render_click(view, "open_command_palette")
+      render_click(view, "command_palette_hover", %{"index" => "1"})
+
+      view
+      |> element("#command-palette")
+      |> render_hook("command_palette_key", %{"key" => "Enter"})
+
+      html = render(view)
+      refute has_element?(view, "#command-palette")
+      assert html =~ "projects-page-root"
+    end
+
+    test "clicking Open Docs navigates to docs", %{conn: conn} do
+      view = live_with_vault_skipped(conn)
+
+      render_click(view, "open_command_palette")
+      view |> element("button[id='command-palette-item-nav.docs']") |> render_click()
+
+      refute has_element?(view, "#command-palette")
+      assert has_element?(view, "#docs-live-root")
+    end
+
+    test "Open Settings command navigates to settings", %{conn: conn} do
+      view = live_with_vault_skipped(conn)
+
+      render_click(view, "command_palette_action", %{"id" => "nav.settings"})
+
+      refute has_element?(view, "#command-palette")
+      assert has_element?(view, "#settings-live-root")
+    end
+
+    test "settings chord navigates to settings", %{conn: conn} do
+      view = live_with_vault_skipped(conn)
+
+      render_hook(view, "keyboard_chord", %{"id" => "nav.settings"})
+      assert has_element?(view, "#settings-live-root")
+    end
+
+    test "new project command opens new folder modal on Projects", %{conn: conn} do
+      view = live_with_vault_skipped(conn)
+
+      render_click(view, "command_palette_action", %{"id" => "new.proj"})
+
+      assert has_element?(view, "#projects-page-root")
+      assert has_element?(view, "#new-folder-modal")
+      assert render(view) =~ "New project"
+    end
+
+    test "new project chord opens modal while staying in Project Vault", %{conn: conn} do
+      folder = project_folder_fixture(%{name: "Chord Project"})
+      view = live_with_vault_skipped(conn)
+
+      view |> element("#rail-projects-btn") |> render_click()
+      view |> element("#project-card-#{folder.id}") |> render_click()
+
+      render_hook(view, "keyboard_chord", %{"id" => "new.proj"})
+
+      assert has_element?(view, "#crumb-projects-btn")
+      assert has_element?(view, "#new-folder-modal")
+      assert render(view) =~ "Choose a folder on this device"
+    end
+
+    test "keyboard_chord navigates with G then W semantics", %{conn: conn} do
+      view = live_with_vault_skipped(conn)
+
+      render_hook(view, "keyboard_chord", %{"id" => "nav.projects"})
+      assert render(view) =~ "projects-page-root"
+    end
+
+    test "generator chord toggles the password generator drawer", %{conn: conn} do
+      view = live_with_vault_skipped(conn)
+
+      render_hook(view, "keyboard_chord", %{"id" => "nav.gen"})
+      assert has_element?(view, "#generator-drawer")
+
+      render_hook(view, "keyboard_chord", %{"id" => "nav.gen"})
+      refute has_element?(view, "#generator-drawer")
+    end
+
+    test "Escape closes the password generator drawer", %{conn: conn} do
+      view = live_with_vault_skipped(conn)
+
+      render_hook(view, "keyboard_chord", %{"id" => "nav.gen"})
+      assert has_element?(view, "#generator-drawer")
+
+      view |> element("#generator-drawer") |> render_keydown(%{"key" => "Escape"})
+      refute has_element?(view, "#generator-drawer")
+    end
+
+    test "lock chord locks an unlocked vault", %{conn: conn} do
+      conn = get(conn, ~p"/")
+      session_id = get_session(conn, "vault_session_id")
+      SuchConfigDesktop.VaultSessionRegistry.put(session_id, "palette-lock-key")
+      {:ok, view, _html} = live(conn, "/", @live_opts)
+
+      render_hook(view, "keyboard_chord", %{"id" => "lock"})
+      html = render(view)
+
+      assert html =~ "Vault locked"
+      refute SuchConfigDesktop.VaultSessionRegistry.get(session_id)
+    end
+
+    test "lock chord shows lock icons on project cards", %{conn: conn} do
+      folder = project_folder_fixture(%{name: "Lock Icon Project"})
+      conn = get(conn, ~p"/")
+      session_id = get_session(conn, "vault_session_id")
+      SuchConfigDesktop.VaultSessionRegistry.put(session_id, "palette-lock-cards-key")
+      {:ok, view, _html} = live(conn, "/", @live_opts)
+
+      view |> element("#rail-projects-btn") |> render_click()
+      refute has_element?(view, "#project-card-lock-#{folder.id}")
+
+      render_hook(view, "keyboard_chord", %{"id" => "lock"})
+
+      assert has_element?(view, "#project-card-#{folder.id}")
+      assert has_element?(view, "#project-card-lock-#{folder.id}")
+    end
+  end
 end

@@ -100,6 +100,12 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.EntryEvents do
 
   def new_item(params, socket) do
     socket = sync_folder_from_params(socket, params)
+    type = Map.get(params, "type", "login")
+    new_item_of_type(type, socket)
+  end
+
+  def new_item_of_type(type, socket) when is_binary(type) do
+    kind = Formatting.kind_from_modal_type(type)
 
     cond do
       socket.assigns.global_passkey_unlocked ->
@@ -108,6 +114,7 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.EntryEvents do
            socket,
            empty_editor_fields() ++
              [
+               item_kind: kind,
                show_new_entry_modal: true,
                new_entry_tags: "",
                item_tags: [],
@@ -119,12 +126,14 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.EntryEvents do
       true ->
         {:noreply,
          assign(socket,
-           pending_unlock_action: :new_item,
+           pending_unlock_action: {:new_item, type},
            show_global_passkey_modal: true,
            global_passkey_purpose: "save"
          )}
     end
   end
+
+  def new_item_of_type(_, socket), do: new_item_of_type("login", socket)
 
   def entry_form_change(params, socket) do
     previous_kind = Formatting.normalize_kind(socket.assigns.item_kind)

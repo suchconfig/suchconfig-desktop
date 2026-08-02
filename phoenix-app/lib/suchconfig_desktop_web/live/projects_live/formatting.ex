@@ -18,6 +18,31 @@ defmodule SuchConfigDesktopWeb.ProjectsLive.Formatting do
     )
   end
 
+  def refresh_project_entries(socket) do
+    folders = ProjectVault.list_project_folders()
+
+    socket =
+      case socket.assigns[:selected_project_id] do
+        nil ->
+          assign(socket, folders: folders)
+
+        id ->
+          case Enum.find(folders, &(&1.id == id)) do
+            nil ->
+              assign(socket,
+                folders: folders,
+                selected_project_id: nil,
+                selected_project_name: nil
+              )
+
+            folder ->
+              assign(socket, folders: folders, selected_project_name: folder.name)
+          end
+      end
+
+    assign_project_entries(socket)
+  end
+
   def project_entries(folders, vault_item_ui_enabled?) when is_list(folders) do
     Enum.map(folders, fn folder ->
       notes = ProjectVault.list_notes_by_folder(folder.id)

@@ -44,7 +44,7 @@ defmodule SuchConfigDesktopWeb.Sc.Topbar do
         <input
           id="topbar-command-input"
           type="text"
-          placeholder="Search across vaults…"
+          placeholder="Commands…"
           readonly
           phx-click="open_command_palette"
           phx-focus="open_command_palette"

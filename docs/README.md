@@ -1,4 +1,4 @@
-# SuchConfig Desktop — documentation
+# SuchConfig — documentation
 
 Public Alpha docs for the open-core CE. Product overview: root [README.md](../README.md). Strategy (short): [open-core.md](./open-core.md).
 
@@ -12,6 +12,7 @@ Public Alpha docs for the open-core CE. Product overview: root [README.md](../RE
 
 - [open-core.md](./open-core.md) — what ships in CE
 - [public-alpha-roadmap.md](./public-alpha-roadmap.md) — maturity and next steps
+- [keyboard-shortcuts.md](./keyboard-shortcuts.md) — command palette and Linear-style chords
 - [SECURITY.md](../SECURITY.md) — vault posture + local-only network (repo root)
 
 ## Vision & local-first

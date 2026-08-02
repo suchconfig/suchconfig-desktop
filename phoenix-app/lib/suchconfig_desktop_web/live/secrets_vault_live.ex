@@ -132,6 +132,8 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
 
   def handle_event("lock_global_passkey", params, socket), do: Passkey.lock(params, socket)
 
+  def handle_event("vault_key_stored", _params, socket), do: {:noreply, socket}
+
   def handle_event("select_folder", params, socket),
     do: FolderEvents.select_folder(params, socket)
 
@@ -288,6 +290,8 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
 
   def handle_info(:vault_locked, socket), do: Passkey.apply_vault_locked_state(socket)
 
+  def handle_info(:vault_locked_no_overlay, socket), do: Passkey.apply_vault_locked_state(socket)
+
   def handle_info(:trusted_folder_sync_now, socket), do: {:noreply, socket}
 
   def handle_info(:trusted_folder_verify_integrity, socket), do: {:noreply, socket}
@@ -306,6 +310,10 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
 
   def handle_info(:load_vault_wide_view_data, socket) do
     {:noreply, ViewData.assign_view_data(socket, load_all_items: true)}
+  end
+
+  def handle_info({:open_new_entry, type}, socket) when is_binary(type) do
+    EntryEvents.new_item_of_type(type, socket)
   end
 
   @impl true

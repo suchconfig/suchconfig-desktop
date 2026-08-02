@@ -18,6 +18,62 @@ spawnSync('node', ['scripts/ensure-phoenix-sidecar-bundle.mjs'], {
 const PHOENIX_PID_FILE = join(projectRoot, '.phoenix-dev.pid');
 const PHOENIX_PORT = 4000;
 
+function phoenixMixEnv() {
+  const env = { ...process.env, MIX_ENV: 'dev' };
+  delete env.ERLANG_HOME;
+  delete env.SUCHCONFIG_DARWIN_ARCH;
+  delete env.SUCHCONFIG_X86_64_ERLANG_ROOT;
+
+  const asdfDataDir = env.ASDF_DATA_DIR || join(env.HOME || '', '.asdf_data');
+  const asdfShims = join(asdfDataDir, 'shims');
+  if (asdfShims && existsSync(asdfShims)) {
+    env.PATH = `${asdfShims}:${env.PATH || ''}`;
+  }
+
+  return env;
+}
+
+function runMix(args, cwd, env) {
+  if (process.platform === 'win32') {
+    return spawnSync('mix.bat', args, {
+      cwd,
+      stdio: 'inherit',
+      env,
+      shell: true,
+    });
+  }
+
+  const command = ['mix', ...args].map(shellQuote).join(' ');
+  return spawnSync('bash', ['-c', command], {
+    cwd,
+    stdio: 'inherit',
+    env,
+  });
+}
+
+function shellQuote(value) {
+  return `'${String(value).replace(/'/g, `'\\''`)}'`;
+}
+
+function spawnMixServer(cwd, env) {
+  if (process.platform === 'win32') {
+    return spawn('mix.bat', ['phx.server'], {
+      cwd,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: false,
+      env,
+      shell: true,
+    });
+  }
+
+  return spawn('bash', ['-c', 'mix phx.server'], {
+    cwd,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    detached: false,
+    env,
+  });
+}
+
 function killPort(port) {
   if (process.platform === 'win32') {
     return;
@@ -67,7 +123,9 @@ async function waitForServer(port, maxWait = 60000) {
 async function startPhoenixDev() {
   console.log('🚀 Starting Phoenix LiveView development server...');
 
-  const phoenixPath = process.env.SUCHCONFIG_DESKTOP_PATH || './phoenix-app';
+  const phoenixPath = process.env.SUCHCONFIG_DESKTOP_PATH
+    ? process.env.SUCHCONFIG_DESKTOP_PATH
+    : join(projectRoot, 'phoenix-app');
   const phoenixMixPath = join(phoenixPath, 'mix.exs');
 
   if (!existsSync(phoenixMixPath)) {
@@ -118,24 +176,26 @@ async function startPhoenixDev() {
     }
   }
 
+  const mixEnv = phoenixMixEnv();
+
   console.log('📦 Running database migrations (mix ecto.migrate)...');
-  const migrate = spawnSync('mix', ['ecto.migrate'], {
-    cwd: phoenixPath,
-    stdio: 'inherit',
-    env: process.env,
-  });
+  const migrate = runMix(['ecto.migrate'], phoenixPath, mixEnv);
   if (migrate.status !== 0) {
     console.error(
-      '❌ mix ecto.migrate failed. From phoenix-app try: mix ecto.create && mix ecto.migrate'
+      '❌ mix ecto.migrate failed.',
+      `status=${migrate.status}`,
+      migrate.error ? `error=${migrate.error.message}` : ''
+    );
+    console.error(
+      'From phoenix-app try: unset MIX_ENV ERLANG_HOME SUCHCONFIG_DARWIN_ARCH; mix ecto.create && mix ecto.migrate'
+    );
+    console.error(
+      'After a release build, also try: rm -rf _build/dev && mix deps.get && mix compile'
     );
     process.exit(migrate.status ?? 1);
   }
 
-  const phoenixProcess = spawn('mix', ['phx.server'], {
-    cwd: phoenixPath,
-    stdio: ['ignore', 'pipe', 'pipe'],
-    detached: false,
-  });
+  const phoenixProcess = spawnMixServer(phoenixPath, mixEnv);
 
   phoenixProcess.stdout.on('data', (data) => {
     const output = data.toString();

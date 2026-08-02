@@ -1,7 +1,7 @@
 {
   "name": "suchconfig",
   "version": "0.1.1",
-  "description": "SuchConfig Desktop",
+  "description": "SuchConfig",
   "type": "module",
   "scripts": {
     "tauri": "node ./scripts/tauri-cli.mjs",

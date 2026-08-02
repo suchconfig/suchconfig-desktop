@@ -110,13 +110,13 @@ fn default_device_name() -> String {
         .and_then(|h| h.into_string().ok())
         .map(|s| sanitize_device_name(&s))
         .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| "SuchConfig Desktop".to_string())
+        .unwrap_or_else(|| "SuchConfig".to_string())
 }
 
 fn sanitize_device_name(name: &str) -> String {
     let trimmed = name.trim();
     if trimmed.is_empty() {
-        "SuchConfig Desktop".to_string()
+        "SuchConfig".to_string()
     } else {
         trimmed.chars().take(64).collect()
     }

@@ -397,7 +397,8 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEvents do
                error: nil,
                new_note_form_highlight: false
              )
-             |> broadcast_projects_sync()}
+             |> broadcast_projects_sync()
+             |> maybe_navigate_parent_to_projects()}
 
           {:error, changeset} ->
             {:noreply, assign(socket, error: ProjectVault.format_error(changeset), info: nil)}
@@ -412,6 +413,30 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEvents do
   end
 
   defp broadcast_projects_sync(socket) do
-    TrustedFolderEvents.notify_projects_changed(socket)
+    socket
+    |> notify_parent_projects_changed()
+    |> TrustedFolderEvents.notify_projects_changed()
+  end
+
+  defp notify_parent_projects_changed(socket) do
+    with true <- socket.assigns[:embedded] == true,
+         pid when is_pid(pid) <- socket.parent_pid do
+      send(pid, :refresh_project_entries)
+    else
+      _ -> :ok
+    end
+
+    socket
+  end
+
+  defp maybe_navigate_parent_to_projects(socket) do
+    with true <- socket.assigns[:embedded] == true,
+         pid when is_pid(pid) <- socket.parent_pid do
+      send(pid, {:parent, :navigate, :projects})
+    else
+      _ -> :ok
+    end
+
+    socket
   end
 end

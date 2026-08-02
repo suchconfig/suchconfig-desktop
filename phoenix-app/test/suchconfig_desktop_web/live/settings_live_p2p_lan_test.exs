@@ -22,4 +22,17 @@ defmodule SuchConfigDesktopWeb.SettingsLiveP2pLanTest do
     assert html =~ ~s(id="settings-p2p-lan-toggle-row")
     assert html =~ ~s(phx-click="p2p_toggle_lan_sync")
   end
+
+  test "settings storage card shows live sqlite summary", %{conn: conn} do
+    view = live_on_settings(conn)
+
+    assert has_element?(view, "#settings-storage-card")
+    assert has_element?(view, "#settings-storage-size")
+    assert has_element?(view, "#settings-storage-breakdown")
+
+    html = render(view)
+    refute html =~ "90 days"
+    assert html =~ "on disk"
+    assert html =~ "secure note"
+  end
 end

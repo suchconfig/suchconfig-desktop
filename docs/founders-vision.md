@@ -1,6 +1,6 @@
 # Founder’s vision
 
-SuchConfig Desktop exists so I can keep **project configs and secrets** in one **local-first** vault I control—on device, offline-capable, with CRDT merge for continuity I own (Trusted Folder, optional LAN sync). I dogfood it before anyone else.
+SuchConfig exists so I can keep **project configs and secrets** in one **local-first** vault I control—on device, offline-capable, with CRDT merge for continuity I own (Trusted Folder, optional LAN sync). I dogfood it before anyone else.
 
 ## North stars
 

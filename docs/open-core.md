@@ -1,6 +1,6 @@
 # SuchConfig open core (Public Alpha)
 
-SuchConfig Desktop is a **local-first Project Vault + Secrets Vault**. Configs and credentials stay on your device. Multi-device continuity is **user-owned** (Trusted Folder and optional LAN Wi‑Fi sync)—not a SuchConfig cloud vault.
+SuchConfig is a **local-first Project Vault + Secrets Vault**. Configs and credentials stay on your device. Multi-device continuity is **user-owned** (Trusted Folder and optional LAN Wi‑Fi sync)—not a SuchConfig cloud vault.
 
 **One-liner:** Open core audits the vault crypto and ships a free local vault with Trusted Folder and opt-in LAN sync as those layers mature.
 
@@ -31,6 +31,6 @@ SuchConfig Desktop is a **local-first Project Vault + Secrets Vault**. Configs a
 
 ## Maturity
 
-Public Alpha tag: **`v1.0.0-alpha.5`**. See [public-alpha-roadmap.md](./public-alpha-roadmap.md). Platform: **macOS primary**; Linux/Windows best-effort.
+Public Alpha tag: **`v1.0.0-alpha.6`**. See [public-alpha-roadmap.md](./public-alpha-roadmap.md). Platform: **macOS primary**; Linux/Windows best-effort.
 
 Pricing / Stripe storefront stays hidden during alpha; Free download + this GitHub tree are the public surface.

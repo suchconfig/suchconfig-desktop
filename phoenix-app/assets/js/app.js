@@ -156,12 +156,15 @@ const ResizableSplit = {
 const ToastAutoDismiss = {
   mounted() {
     const ms = parseInt(this.el.dataset.autocloseMs || '10000', 10);
-    this.timer = setTimeout(() => {
-      this.timer = null;
-      if (this.el && this.el.isConnected) {
-        this.el.click();
-      }
-    }, Number.isFinite(ms) ? ms : 10000);
+    this.timer = setTimeout(
+      () => {
+        this.timer = null;
+        if (this.el && this.el.isConnected) {
+          this.el.click();
+        }
+      },
+      Number.isFinite(ms) ? ms : 10000,
+    );
   },
 
   destroyed() {
@@ -335,7 +338,10 @@ const NewEntryTypePicker = {
 
   applyType(type, scrollIntoView = true) {
     this.el.querySelectorAll('.type-card').forEach((card) => {
-      card.classList.toggle('active', card.getAttribute('phx-value-type') === type);
+      card.classList.toggle(
+        'active',
+        card.getAttribute('phx-value-type') === type,
+      );
     });
 
     const kindInput = this.el.querySelector('input[name="kind"]');
@@ -349,7 +355,9 @@ const NewEntryTypePicker = {
     }
 
     if (scrollIntoView) {
-      const panel = this.el.querySelector(`.entry-type-panel[data-entry-type="${type}"]`);
+      const panel = this.el.querySelector(
+        `.entry-type-panel[data-entry-type="${type}"]`,
+      );
       panel?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   },
@@ -451,8 +459,8 @@ const CopyButton = {
 const VAULT_KEY_ID_DEFAULT = 'suchconfig.project_manager.vault';
 
 const vaultSkippedCookieName = () =>
-  document.querySelector('meta[name="suchconfig-vault-skipped-cookie"]')?.content ||
-  'suchconfig_vault_skipped';
+  document.querySelector('meta[name="suchconfig-vault-skipped-cookie"]')
+    ?.content || 'suchconfig_vault_skipped';
 
 const VaultKeyStore = {
   mounted() {
@@ -466,29 +474,33 @@ const VaultKeyStore = {
       const { key_id, wrapped_key } = payload || {};
       if (!key_id || wrapped_key == null) return;
       if (window.SuchConfigNativePasskey) {
-        window.SuchConfigNativePasskey
-          .storeWrappedKey(key_id, wrapped_key)
+        window.SuchConfigNativePasskey.storeWrappedKey(key_id, wrapped_key)
           .then((result) => {
             if (!result || (result.stored !== true && result.ok !== true)) {
               this.pushEvent('vault_key_stored', {
                 ok: false,
-                message: result && result.message ? result.message : 'Store reported failure',
+                message:
+                  result && result.message
+                    ? result.message
+                    : 'Store reported failure',
               });
               return;
             }
-            return window.SuchConfigNativePasskey.loadWrappedKey(key_id).then((loadResult) => {
-              const storedOk =
-                loadResult &&
-                loadResult.found &&
-                loadResult.wrapped_key &&
-                String(loadResult.wrapped_key) === String(wrapped_key);
-              this.pushEvent('vault_key_stored', {
-                ok: storedOk,
-                message: storedOk
-                  ? (result && result.message) || ''
-                  : 'Key could not be read back from Keychain. It may not have been saved.',
-              });
-            });
+            return window.SuchConfigNativePasskey.loadWrappedKey(key_id).then(
+              (loadResult) => {
+                const storedOk =
+                  loadResult &&
+                  loadResult.found &&
+                  loadResult.wrapped_key &&
+                  String(loadResult.wrapped_key) === String(wrapped_key);
+                this.pushEvent('vault_key_stored', {
+                  ok: storedOk,
+                  message: storedOk
+                    ? (result && result.message) || ''
+                    : 'Key could not be read back from Keychain. It may not have been saved.',
+                });
+              },
+            );
           })
           .catch((err) => {
             this.pushEvent('vault_key_stored', {
@@ -497,7 +509,10 @@ const VaultKeyStore = {
             });
           });
       } else {
-        this.pushEvent('vault_key_stored', { ok: false, message: 'Native bridge not available' });
+        this.pushEvent('vault_key_stored', {
+          ok: false,
+          message: 'Native bridge not available',
+        });
       }
     });
   },
@@ -529,7 +544,11 @@ const GlobalPasskeyNative = {
         e.preventDefault();
         this.runNativeAuth();
       };
-      this.unlockForm.addEventListener('submit', this.unlockFormSubmitBound, true);
+      this.unlockForm.addEventListener(
+        'submit',
+        this.unlockFormSubmitBound,
+        true,
+      );
     }
     if (!this.unlockClickBound) {
       this.unlockClickBound = (e) => {
@@ -544,7 +563,11 @@ const GlobalPasskeyNative = {
 
   unbindUnlockTriggers() {
     if (this.unlockForm && this.unlockFormSubmitBound) {
-      this.unlockForm.removeEventListener('submit', this.unlockFormSubmitBound, true);
+      this.unlockForm.removeEventListener(
+        'submit',
+        this.unlockFormSubmitBound,
+        true,
+      );
       this.unlockFormSubmitBound = null;
     }
     if (this.unlockClickBound) {
@@ -559,8 +582,7 @@ const GlobalPasskeyNative = {
 
   reportAvailability() {
     if (window.SuchConfigNativePasskey) {
-      window.SuchConfigNativePasskey
-        .available()
+      window.SuchConfigNativePasskey.available()
         .then((availability) => {
           this.pushEvent('native_global_passkey_available', availability || {});
         })
@@ -620,7 +642,8 @@ const GlobalPasskeyNative = {
     try {
       const result = await window.SuchConfigNativePasskey.authenticate(reason);
       if (result && (result.authenticated || result.ok)) {
-        const loadResult = await window.SuchConfigNativePasskey.loadWrappedKey(vaultKeyId);
+        const loadResult =
+          await window.SuchConfigNativePasskey.loadWrappedKey(vaultKeyId);
         if (loadResult && loadResult.found && loadResult.wrapped_key) {
           this.pushEvent('native_global_passkey_authenticated', {
             ...result,
@@ -766,7 +789,7 @@ const DropZone = {
     if (window.__TAURI__) {
       console.log(
         'Tauri detected, available APIs:',
-        Object.keys(window.__TAURI__)
+        Object.keys(window.__TAURI__),
       );
 
       try {
@@ -787,7 +810,7 @@ const DropZone = {
             if (['csv', 'tsv', 'txt', 'json', 'xml'].includes(ext)) {
               console.log(
                 'DropZone: Ignoring file drop (not a directory):',
-                path
+                path,
               );
               return;
             }
@@ -828,21 +851,21 @@ const DropZone = {
 
         for (const eventName of dropEvents) {
           const unlisten = await listen(eventName, (e) =>
-            handleDrop(eventName, e)
+            handleDrop(eventName, e),
           );
           this.unlisteners.push(unlisten);
         }
 
         for (const eventName of hoverEvents) {
           const unlisten = await listen(eventName, (e) =>
-            handleHover(eventName, e)
+            handleHover(eventName, e),
           );
           this.unlisteners.push(unlisten);
         }
 
         for (const eventName of leaveEvents) {
           const unlisten = await listen(eventName, (e) =>
-            handleLeave(eventName, e)
+            handleLeave(eventName, e),
           );
           this.unlisteners.push(unlisten);
         }
@@ -1001,21 +1024,21 @@ const CsvDropZone = {
 
         for (const eventName of dropEvents) {
           const unlisten = await listen(eventName, (e) =>
-            handleDrop(eventName, e)
+            handleDrop(eventName, e),
           );
           this.unlisteners.push(unlisten);
         }
 
         for (const eventName of hoverEvents) {
           const unlisten = await listen(eventName, (e) =>
-            handleHover(eventName, e)
+            handleHover(eventName, e),
           );
           this.unlisteners.push(unlisten);
         }
 
         for (const eventName of leaveEvents) {
           const unlisten = await listen(eventName, (e) =>
-            handleLeave(eventName, e)
+            handleLeave(eventName, e),
           );
           this.unlisteners.push(unlisten);
         }
@@ -1080,7 +1103,7 @@ const ParsingProgress = {
         this.phaseTargetProgress = 80;
         this.phaseStartTime = Date.now();
         this.phaseDuration = this.estimateAnalysisTime(
-          row_count || this.totalLines
+          row_count || this.totalLines,
         );
       } else if (phase === 'analyzing') {
         this.currentProgress = 85;
@@ -1111,7 +1134,7 @@ const ParsingProgress = {
         'text-gray-400',
         'text-blue-500',
         'text-green-500',
-        'animate-pulse'
+        'animate-pulse',
       );
 
       if (currentPhase === 'complete' || index < currentIndex) {
@@ -1321,7 +1344,7 @@ const P2pPairingSync = {
           invoke('p2p_list_peers').then((peerPayload) => {
             const peers = peerPayload?.peers || peerPayload?.['peers'] || [];
             push('p2p_status', { local_device: localDevice, peers });
-          })
+          }),
         )
         .catch((err) => console.error('initial p2p status failed:', err));
 
@@ -1342,7 +1365,9 @@ const P2pPairingSync = {
 
     this.handleEvent('p2p_set_lan_sync_enabled', async (payload) => {
       if (!invoke) {
-        push('p2p_lan_sync_error', { message: 'LAN sync requires the desktop app.' });
+        push('p2p_lan_sync_error', {
+          message: 'LAN sync requires the desktop app.',
+        });
         return;
       }
       const enabled = payload.enabled ?? payload['enabled'] ?? false;
@@ -1356,7 +1381,9 @@ const P2pPairingSync = {
 
     this.handleEvent('p2p_connect_handoff', async (payload) => {
       if (!invoke) {
-        push('p2p_lan_sync_error', { message: 'LAN handoff requires the desktop app.' });
+        push('p2p_lan_sync_error', {
+          message: 'LAN handoff requires the desktop app.',
+        });
         return;
       }
       const deviceId = payload.device_id || payload['device_id'] || '';
@@ -1370,7 +1397,9 @@ const P2pPairingSync = {
 
     this.handleEvent('p2p_send_handoff_bundles', async (payload) => {
       if (!invoke) {
-        push('p2p_lan_sync_error', { message: 'LAN handoff requires the desktop app.' });
+        push('p2p_lan_sync_error', {
+          message: 'LAN handoff requires the desktop app.',
+        });
         return;
       }
       const bundles = payload.bundles || payload['bundles'] || [];
@@ -1384,7 +1413,9 @@ const P2pPairingSync = {
 
     this.handleEvent('p2p_request_handoff', async (payload) => {
       if (!invoke) {
-        push('p2p_lan_sync_error', { message: 'LAN handoff requires the desktop app.' });
+        push('p2p_lan_sync_error', {
+          message: 'LAN handoff requires the desktop app.',
+        });
         return;
       }
       const deviceId = payload.device_id || payload['device_id'] || '';
@@ -1545,10 +1576,15 @@ function installBrokerSidecarBridge(liveSocket) {
 
     const scopeId = payload.scope_id || payload.scopeId || '';
     const manifest = payload.manifest || null;
-    const enableProxy = payload.enable_proxy === true || payload.enableProxy === true;
+    const enableProxy =
+      payload.enable_proxy === true || payload.enableProxy === true;
 
     try {
-      const status = await invoke('broker_start', { scopeId, manifest, enableProxy });
+      const status = await invoke('broker_start', {
+        scopeId,
+        manifest,
+        enableProxy,
+      });
       pushResult('broker_start_result', normalizeStatus(status));
     } catch (err) {
       console.error('broker_start failed:', err);
@@ -1783,7 +1819,9 @@ const TrustedFolderSync = {
       }
       const masterKey = payload.master_key || payload['master_key'] || null;
       try {
-        const report = await invoke('verify_trusted_folder_integrity', { masterKey });
+        const report = await invoke('verify_trusted_folder_integrity', {
+          masterKey,
+        });
         push('trusted_folder_verify_result', report);
       } catch (err) {
         push('trusted_folder_sync_failed', {
@@ -1825,7 +1863,9 @@ const ArchiveExportFolderPicker = {
           console.error('Failed to select export folder:', err);
         }
       } else {
-        console.warn('Tauri API not available — use the desktop app to pick an export folder.');
+        console.warn(
+          'Tauri API not available — use the desktop app to pick an export folder.',
+        );
       }
     };
 
@@ -1843,7 +1883,8 @@ const DownloadHook = {
   mounted() {
     this.handleEvent('save_archive_export', async (payload) => {
       const full_path = payload.full_path ?? payload['full_path'];
-      const content_base64 = payload.content_base64 ?? payload['content_base64'];
+      const content_base64 =
+        payload.content_base64 ?? payload['content_base64'];
       const tauriCore = window.__TAURI__?.core;
       if (!tauriCore || typeof tauriCore.invoke !== 'function') {
         return;
@@ -1926,7 +1967,7 @@ const DownloadHook = {
         } catch (err) {
           console.error(
             'Tauri save dialog failed, falling back to browser download:',
-            err
+            err,
           );
           this.browserDownload(rawContent, defaultName, mime_type, encoding);
           this.pushEvent('export_success', { filename: defaultName });
@@ -2052,7 +2093,10 @@ const JobFilesHook = {
         return;
       }
       if (!window.__TAURI__) {
-        this.pushEvent('reveal_job_fs_done', { ok: false, message: 'not_tauri' });
+        this.pushEvent('reveal_job_fs_done', {
+          ok: false,
+          message: 'not_tauri',
+        });
         return;
       }
       try {
@@ -2074,7 +2118,10 @@ const JobFilesHook = {
       }
       const dirPath = payload && payload.directory_path;
       if (!dirPath) {
-        this.pushEvent('job_delete_fs_done', { ok: true, job_id: payload.job_id });
+        this.pushEvent('job_delete_fs_done', {
+          ok: true,
+          job_id: payload.job_id,
+        });
         return;
       }
       if (!window.__TAURI__) {
@@ -2088,7 +2135,10 @@ const JobFilesHook = {
       try {
         const { invoke } = window.__TAURI__.core;
         await invoke('remove_path', { path: dirPath });
-        this.pushEvent('job_delete_fs_done', { ok: true, job_id: payload.job_id });
+        this.pushEvent('job_delete_fs_done', {
+          ok: true,
+          job_id: payload.job_id,
+        });
       } catch (err) {
         console.error('remove_path failed', err);
         this.pushEvent('job_delete_fs_done', {
@@ -2134,63 +2184,250 @@ const JobFilesHook = {
 
 const CommandPaletteHotkey = {
   mounted() {
-    this.onKey = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        this.pushEvent('open_command_palette');
-      }
-    };
+    this.chordPrefix = null;
+    this.chordTimer = null;
+    this.chordTimeoutMs = 1000;
+    this.onKey = (e) => this.handleKey(e);
     window.addEventListener('keydown', this.onKey);
   },
   destroyed() {
+    this.clearChord();
     if (this.onKey) {
       window.removeEventListener('keydown', this.onKey);
     }
+  },
+  clearChord() {
+    this.chordPrefix = null;
+    if (this.chordTimer) {
+      clearTimeout(this.chordTimer);
+      this.chordTimer = null;
+    }
+  },
+  isTypingTarget(target) {
+    if (!target) return false;
+    const tag = (target.tagName || '').toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    if (target.isContentEditable) return true;
+    return false;
+  },
+  handleKey(e) {
+    if (e.defaultPrevented) return;
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      this.clearChord();
+      this.pushEvent('open_command_palette');
+      return;
+    }
+
+    if (
+      e.ctrlKey &&
+      e.shiftKey &&
+      e.key.toLowerCase() === 'l' &&
+      !e.metaKey &&
+      !e.altKey
+    ) {
+      if (this.isTypingTarget(e.target)) return;
+      e.preventDefault();
+      this.clearChord();
+      this.pushEvent('keyboard_chord', { id: 'lock' });
+      return;
+    }
+
+    if (e.metaKey || e.ctrlKey || e.altKey) {
+      this.clearChord();
+      return;
+    }
+
+    if (document.getElementById('command-palette')) {
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      if (document.getElementById('generator-drawer')) {
+        e.preventDefault();
+        this.clearChord();
+        this.pushEvent('close_generator_drawer');
+      } else {
+        this.clearChord();
+      }
+      return;
+    }
+
+    if (this.isTypingTarget(e.target)) {
+      this.clearChord();
+      return;
+    }
+
+    const key = (e.key || '').toLowerCase();
+    const isLetter = key.length === 1 && key >= 'a' && key <= 'z';
+    const isChordFollowUp = isLetter || key === ',';
+
+    if (this.chordPrefix) {
+      if (!isChordFollowUp) {
+        return;
+      }
+      const action = this.resolveChord(this.chordPrefix, key);
+      this.clearChord();
+      if (action) {
+        e.preventDefault();
+        this.pushEvent('keyboard_chord', { id: action });
+      }
+      return;
+    }
+
+    if (!isLetter) {
+      return;
+    }
+
+    if (key === 'g' || key === 'n') {
+      e.preventDefault();
+      this.chordPrefix = key;
+      this.chordTimer = setTimeout(
+        () => this.clearChord(),
+        this.chordTimeoutMs,
+      );
+    }
+  },
+  resolveChord(prefix, key) {
+    const map = {
+      g: {
+        d: 'nav.dash',
+        w: 'nav.projects',
+        p: 'nav.proj',
+        s: 'nav.sec',
+        g: 'nav.gen',
+        ',': 'nav.settings',
+        e: 'export',
+        i: 'import',
+      },
+      n: {
+        l: 'new.login',
+        a: 'new.api',
+        s: 'new.ssh',
+        n: 'new.note',
+        p: 'new.proj',
+      },
+    };
+    return (map[prefix] && map[prefix][key]) || null;
   },
 };
 
 const CommandPalette = {
   mounted() {
-    this.input = this.el.querySelector('#command-palette-input');
-    this.focusInput();
+    this.chordPrefix = null;
+    this.chordTimer = null;
+    this.chordTimeoutMs = 1000;
+    this.focusDialog();
     this.onKey = (e) => this.handleKey(e);
     window.addEventListener('keydown', this.onKey, true);
   },
   updated() {
-    this.input = this.el.querySelector('#command-palette-input');
-    this.focusInput();
+    this.focusDialog();
+    this.scrollSelectedIntoView();
   },
   destroyed() {
+    this.clearChord();
     if (this.onKey) {
       window.removeEventListener('keydown', this.onKey, true);
     }
   },
-  focusInput() {
-    if (this.input) {
-      requestAnimationFrame(() => this.input.focus());
+  clearChord() {
+    this.chordPrefix = null;
+    if (this.chordTimer) {
+      clearTimeout(this.chordTimer);
+      this.chordTimer = null;
     }
   },
+  focusDialog() {
+    const dialog = this.el.querySelector('#command-palette-dialog');
+    if (dialog) {
+      requestAnimationFrame(() => dialog.focus({ preventScroll: true }));
+    }
+  },
+  scrollSelectedIntoView() {
+    const selected = this.el.querySelector('.palette-item.is-selected');
+    if (selected) {
+      selected.scrollIntoView({ block: 'nearest' });
+    }
+  },
+  isTypingTarget(target) {
+    if (!target) return false;
+    if (this.el.contains(target)) return false;
+    const tag = (target.tagName || '').toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    if (target.isContentEditable) return true;
+    return false;
+  },
   handleKey(e) {
-    if (!this.el.isConnected) {
-      return;
-    }
-    const tag = e.target && e.target.tagName;
-    if (
-      tag === 'INPUT' &&
-      e.target.id !== 'command-palette-input' &&
-      e.target.id !== 'topbar-command-input'
-    ) {
-      return;
-    }
+    if (!this.el.isConnected) return;
+    if (this.isTypingTarget(e.target)) return;
+
     if (e.key === 'Escape') {
       e.preventDefault();
+      this.clearChord();
       this.pushEvent('command_palette_key', { key: 'Escape' });
       return;
     }
+
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
       e.preventDefault();
+      this.clearChord();
       this.pushEvent('command_palette_key', { key: e.key });
+      return;
     }
+
+    if (e.metaKey || e.ctrlKey || e.altKey) {
+      this.clearChord();
+      return;
+    }
+
+    const key = (e.key || '').toLowerCase();
+    const isLetter = key.length === 1 && key >= 'a' && key <= 'z';
+    const isChordFollowUp = isLetter || key === ',';
+
+    if (this.chordPrefix) {
+      if (!isChordFollowUp) return;
+      const action = this.resolveChord(this.chordPrefix, key);
+      this.clearChord();
+      if (action) {
+        e.preventDefault();
+        this.pushEvent('keyboard_chord', { id: action });
+      }
+      return;
+    }
+
+    if (!isLetter) return;
+
+    if (key === 'g' || key === 'n') {
+      e.preventDefault();
+      this.chordPrefix = key;
+      this.chordTimer = setTimeout(
+        () => this.clearChord(),
+        this.chordTimeoutMs,
+      );
+    }
+  },
+  resolveChord(prefix, key) {
+    const map = {
+      g: {
+        d: 'nav.dash',
+        w: 'nav.projects',
+        p: 'nav.proj',
+        s: 'nav.sec',
+        g: 'nav.gen',
+        ',': 'nav.settings',
+        e: 'export',
+        i: 'import',
+      },
+      n: {
+        l: 'new.login',
+        a: 'new.api',
+        s: 'new.ssh',
+        n: 'new.note',
+        p: 'new.proj',
+      },
+    };
+    return (map[prefix] && map[prefix][key]) || null;
   },
 };
 
@@ -2201,13 +2438,12 @@ const csrfToken = document
 (async () => {
   try {
     // @ts-ignore - phoenix-colocated is generated at build time
-    const colocatedModule = await import(
-      'phoenix-colocated/suchconfig_desktop'
-    );
+    const colocatedModule =
+      await import('phoenix-colocated/suchconfig_desktop');
     colocatedHooks = colocatedModule.hooks || {};
   } catch (e) {
     console.warn(
-      'Colocated hooks not available (this is normal if no colocated hooks exist)'
+      'Colocated hooks not available (this is normal if no colocated hooks exist)',
     );
   }
 
@@ -2278,7 +2514,7 @@ const csrfToken = document
 
   topbar.config({ barColors: { 0: '#29d' }, shadowColor: 'rgba(0, 0, 0, .3)' });
   window.addEventListener('phx:page-loading-start', (_info) =>
-    topbar.show(300)
+    topbar.show(300),
   );
   window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide());
 
@@ -2292,7 +2528,7 @@ window.navigateToPage = function (page) {
   if (hiddenButton) {
     console.log(
       'navigateToPage: Found hidden button, updating phx-value-page to:',
-      page
+      page,
     );
     hiddenButton.setAttribute('phx-value-page', page);
     // Use a small delay to ensure the attribute is set
@@ -2327,31 +2563,58 @@ const normalizeNativePasskeyResponse = (payload, defaults = {}) => {
   };
 };
 
-const nativePasskeyInvokeError = (error, defaults = {}) =>
-  normalizeNativePasskeyResponse(
+const nativePasskeyInvokeError = (error, defaults = {}) => {
+  let message = 'Native passkey invocation failed.';
+  if (typeof error === 'string' && error.trim() !== '') {
+    message = error;
+  } else if (error && typeof error === 'object') {
+    message =
+      error.message ||
+      error.error ||
+      (typeof error.toString === 'function' &&
+      error.toString() !== '[object Object]'
+        ? error.toString()
+        : message);
+  }
+
+  return normalizeNativePasskeyResponse(
     {
       ok: false,
       code: 'invoke_failed',
-      message: error?.message || 'Native passkey invocation failed.',
+      message,
     },
-    defaults
+    defaults,
   );
+};
 
 function biometryStatusToPasskeyAvailability(status) {
-  const platform = typeof navigator !== 'undefined' && navigator.platform ? navigator.platform.toLowerCase() : 'unknown';
+  const platform =
+    typeof navigator !== 'undefined' && navigator.platform
+      ? navigator.platform.toLowerCase()
+      : 'unknown';
   const supported = status && status.isAvailable === true;
-  const provider = supported ? 'tauri_plugin_biometry' : 'tauri_plugin_biometry';
+  const provider = supported
+    ? 'tauri_plugin_biometry'
+    : 'tauri_plugin_biometry';
   return normalizeNativePasskeyResponse(
     {
       ok: supported,
       supported: status != null,
-      code: supported ? 'ready_for_native_integration' : (status && status.errorCode) || 'unavailable',
-      message: supported ? 'Biometry available (Touch ID or device credential).' : (status && status.error) || 'Biometry not available.',
-      platform: platform.includes('mac') ? 'macos' : platform.includes('win') ? 'windows' : platform,
+      code: supported
+        ? 'ready_for_native_integration'
+        : (status && status.errorCode) || 'unavailable',
+      message: supported
+        ? 'Biometry available (Touch ID or device credential).'
+        : (status && status.error) || 'Biometry not available.',
+      platform: platform.includes('mac')
+        ? 'macos'
+        : platform.includes('win')
+          ? 'windows'
+          : platform,
       stub: false,
       provider,
     },
-    { platform: 'desktop', provider: 'tauri_bridge' }
+    { platform: 'desktop', provider: 'tauri_bridge' },
   );
 }
 
@@ -2362,13 +2625,13 @@ window.SuchConfigNativePasskey = {
         normalizeNativePasskeyResponse(
           {
             code: 'no_tauri_runtime',
-            message: 'Native passkey requires SuchConfig Desktop runtime.',
+            message: 'Native passkey requires SuchConfig runtime.',
           },
           {
             platform: 'browser',
             provider: 'no_tauri_runtime',
-          }
-        )
+          },
+        ),
       );
     }
 
@@ -2381,14 +2644,14 @@ window.SuchConfigNativePasskey = {
             normalizeNativePasskeyResponse(payload, {
               code: 'unknown',
               message: 'Native passkey availability status returned.',
-            })
+            }),
           )
           .catch((error) =>
             nativePasskeyInvokeError(error, {
               provider: 'tauri_bridge',
               platform: 'desktop',
-            })
-          )
+            }),
+          ),
       );
   },
 
@@ -2399,13 +2662,13 @@ window.SuchConfigNativePasskey = {
           {
             authenticated: false,
             code: 'no_tauri_runtime',
-            message: 'Native passkey auth requires SuchConfig Desktop runtime.',
+            message: 'Native passkey auth requires SuchConfig runtime.',
           },
           {
             platform: 'browser',
             provider: 'no_tauri_runtime',
-          }
-        )
+          },
+        ),
       );
     }
 
@@ -2422,8 +2685,8 @@ window.SuchConfigNativePasskey = {
       .then(() =>
         normalizeNativePasskeyResponse(
           { ok: true, authenticated: true },
-          { authenticated: false }
-        )
+          { authenticated: false },
+        ),
       )
       .catch((error) =>
         normalizeNativePasskeyResponse(
@@ -2433,8 +2696,12 @@ window.SuchConfigNativePasskey = {
             code: error?.code || 'auth_failed',
             message: error?.message || 'Authentication failed or was canceled.',
           },
-          { authenticated: false, provider: 'tauri_plugin_biometry', platform: 'desktop' }
-        )
+          {
+            authenticated: false,
+            provider: 'tauri_plugin_biometry',
+            platform: 'desktop',
+          },
+        ),
       );
   },
 
@@ -2445,32 +2712,32 @@ window.SuchConfigNativePasskey = {
           {
             stored: false,
             code: 'no_tauri_runtime',
-            message: 'Wrapped key storage requires SuchConfig Desktop runtime.',
+            message: 'Wrapped key storage requires SuchConfig runtime.',
           },
           {
             platform: 'browser',
             provider: 'no_tauri_runtime',
-          }
-        )
+          },
+        ),
       );
     }
 
     const { invoke } = window.__TAURI__.core;
     return invoke('native_global_passkey_store_wrapped_key', {
-      key_id: keyId,
-      wrapped_key: wrappedKey,
+      keyId,
+      wrappedKey,
     })
       .then((payload) =>
         normalizeNativePasskeyResponse(payload, {
           stored: false,
-        })
+        }),
       )
       .catch((error) =>
         nativePasskeyInvokeError(error, {
           stored: false,
           provider: 'tauri_bridge',
           platform: 'desktop',
-        })
+        }),
       );
   },
 
@@ -2482,25 +2749,25 @@ window.SuchConfigNativePasskey = {
             found: false,
             wrapped_key: null,
             code: 'no_tauri_runtime',
-            message: 'Wrapped key loading requires SuchConfig Desktop runtime.',
+            message: 'Wrapped key loading requires SuchConfig runtime.',
           },
           {
             platform: 'browser',
             provider: 'no_tauri_runtime',
-          }
-        )
+          },
+        ),
       );
     }
 
     const { invoke } = window.__TAURI__.core;
     return invoke('native_global_passkey_load_wrapped_key', {
-      key_id: keyId,
+      keyId,
     })
       .then((payload) =>
         normalizeNativePasskeyResponse(payload, {
           found: false,
           wrapped_key: null,
-        })
+        }),
       )
       .catch((error) =>
         nativePasskeyInvokeError(error, {
@@ -2508,7 +2775,7 @@ window.SuchConfigNativePasskey = {
           wrapped_key: null,
           provider: 'tauri_bridge',
           platform: 'desktop',
-        })
+        }),
       );
   },
 
@@ -2519,31 +2786,31 @@ window.SuchConfigNativePasskey = {
           {
             cleared: false,
             code: 'no_tauri_runtime',
-            message: 'Wrapped key clearing requires SuchConfig Desktop runtime.',
+            message: 'Wrapped key clearing requires SuchConfig runtime.',
           },
           {
             platform: 'browser',
             provider: 'no_tauri_runtime',
-          }
-        )
+          },
+        ),
       );
     }
 
     const { invoke } = window.__TAURI__.core;
     return invoke('native_global_passkey_clear_wrapped_key', {
-      key_id: keyId,
+      keyId,
     })
       .then((payload) =>
         normalizeNativePasskeyResponse(payload, {
           cleared: false,
-        })
+        }),
       )
       .catch((error) =>
         nativePasskeyInvokeError(error, {
           cleared: false,
           provider: 'tauri_bridge',
           platform: 'desktop',
-        })
+        }),
       );
   },
 };
@@ -2554,7 +2821,7 @@ document.addEventListener('phx:navigate-parent', (e) => {
   const page = e.detail.page;
   console.log(
     'Document listener: Received navigate-parent event for page:',
-    page
+    page,
   );
 
   // Find all LiveView containers to get the parent
@@ -2574,7 +2841,7 @@ document.addEventListener('phx:navigate-parent', (e) => {
   if (hiddenButton) {
     console.log(
       'Document listener: Found hidden button, updating phx-value-page to:',
-      page
+      page,
     );
     hiddenButton.setAttribute('phx-value-page', page);
     // Force LiveView to recognize the attribute change
@@ -2634,10 +2901,10 @@ if (process.env.NODE_ENV === 'development') {
             reloader.openEditorAtDef(e.target);
           }
         },
-        true
+        true,
       );
 
       window.liveReloader = reloader;
-    }
+    },
   );
 }

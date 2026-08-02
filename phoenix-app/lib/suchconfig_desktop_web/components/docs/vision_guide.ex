@@ -115,7 +115,7 @@ defmodule SuchConfigDesktopWeb.Components.Docs.VisionGuide do
       <section class="docs-section">
         <h2>What we’re building toward</h2>
         <p class="docs-prose">
-          SuchConfig Desktop is the foundation. Shipped today: CRDT-backed vaults, Trusted Folder backup, device pairing for LAN sync, JWT analysis, and the local Generator. On the roadmap: richer Secrets Hub resolution in editors, context export packs, security auditing, and more local-first utilities — always processed on your device.
+          SuchConfig is the foundation. Shipped today: CRDT-backed vaults, Trusted Folder backup, device pairing for LAN sync, JWT analysis, and the local Generator. On the roadmap: richer Secrets Hub resolution in editors, context export packs, security auditing, and more local-first utilities — always processed on your device.
         </p>
         <table class="docs-table">
           <thead>

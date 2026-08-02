@@ -31,7 +31,13 @@ defmodule SuchConfigDesktopWeb.Sc.GeneratorDrawer do
       |> assign(:length_label, length_label(assigns.mode, gmail_alias?, alias_random?))
 
     ~H"""
-    <div :if={@open} id={@id} class="generator-drawer-root">
+    <div
+      :if={@open}
+      id={@id}
+      class="generator-drawer-root"
+      phx-window-keydown="close_generator_drawer"
+      phx-key="Escape"
+    >
       <div class="drawer-backdrop" phx-click="close_generator_drawer" aria-hidden="true" />
       <aside class="drawer" role="dialog" aria-labelledby="generator-drawer-title" aria-modal="true">
         <div class="drawer-head">

@@ -41,7 +41,7 @@ defmodule SuchConfigDesktopWeb.AppLive do
       socket
       |> assign(
         current_page: :home,
-        page_title: "SuchConfig Desktop",
+        page_title: "SuchConfig",
         navigation_items: navigation_items(vault_unlocked),
         show_unlock_overlay: show_unlock_overlay,
         vault_skipped: vault_skipped,
@@ -51,7 +51,6 @@ defmodule SuchConfigDesktopWeb.AppLive do
         vault_key_pending_store: false,
         vault_unlocked: vault_unlocked,
         command_palette_open: false,
-        command_palette_query: "",
         command_palette_cursor: 0,
         selected_project_id: nil,
         selected_project_name: nil,
@@ -86,7 +85,6 @@ defmodule SuchConfigDesktopWeb.AppLive do
     {:noreply,
      assign(socket,
        command_palette_open: true,
-       command_palette_query: "",
        command_palette_cursor: 0
      )}
   end
@@ -94,12 +92,6 @@ defmodule SuchConfigDesktopWeb.AppLive do
   def handle_event("close_command_palette", _params, socket) do
     {:noreply, close_command_palette_assigns(socket)}
   end
-
-  def handle_event("command_palette_query", %{"q" => query}, socket) do
-    {:noreply, assign(socket, command_palette_query: query, command_palette_cursor: 0)}
-  end
-
-  def handle_event("command_palette_query", _params, socket), do: {:noreply, socket}
 
   def handle_event("command_palette_hover", %{"index" => index}, socket) do
     {:noreply, assign(socket, command_palette_cursor: parse_index(index))}
@@ -121,6 +113,21 @@ defmodule SuchConfigDesktopWeb.AppLive do
   end
 
   def handle_event("command_palette_action", _params, socket), do: {:noreply, socket}
+
+  def handle_event("keyboard_chord", %{"id" => id}, socket) when is_binary(id) do
+    if socket.assigns.command_palette_open do
+      socket =
+        socket
+        |> close_command_palette_assigns()
+        |> run_palette_command(id)
+
+      {:noreply, socket}
+    else
+      {:noreply, run_palette_command(socket, id)}
+    end
+  end
+
+  def handle_event("keyboard_chord", _params, socket), do: {:noreply, socket}
 
   def handle_event("trusted_folder_status", params, socket) do
     {:noreply, TrustedFolderEvents.apply_status(socket, params)}
@@ -292,7 +299,7 @@ defmodule SuchConfigDesktopWeb.AppLive do
       if page_atom == :project_vault do
         navigate_to_project_vault(socket)
       else
-        socket |> assign(current_page: page_atom) |> maybe_notify_secrets_vault_visible(page_atom)
+        socket |> assign(current_page: page_atom) |> maybe_notify_page_visible(page_atom)
       end
 
     {:noreply, socket}
@@ -560,14 +567,18 @@ defmodule SuchConfigDesktopWeb.AppLive do
     {:noreply,
      socket
      |> assign(current_page: page)
-     |> maybe_notify_secrets_vault_visible(page)}
+     |> maybe_notify_page_visible(page)}
+  end
+
+  def handle_info(:refresh_project_entries, socket) do
+    {:noreply, ProjectsFormatting.refresh_project_entries(socket)}
   end
 
   def handle_info({:generator_open, :secrets_entry, opts}, socket) do
     socket =
       socket
       |> assign(current_page: :secrets_vault)
-      |> maybe_notify_secrets_vault_visible(:secrets_vault)
+      |> maybe_notify_page_visible(:secrets_vault)
       |> Generator.open(:secrets_entry, opts)
 
     {:noreply, socket}
@@ -702,6 +713,12 @@ defmodule SuchConfigDesktopWeb.AppLive do
 
   def handle_info({:trusted_folder_sync, _}, socket), do: {:noreply, socket}
 
+  def handle_info({:palette_project_vault, message}, socket)
+      when message in [:open_archive_export, :open_archive_import] do
+    broadcast_project_vault(socket, message)
+    {:noreply, socket}
+  end
+
   defp new_session_vault_key do
     32 |> :crypto.strong_rand_bytes() |> Base.encode16(case: :lower)
   end
@@ -821,6 +838,7 @@ defmodule SuchConfigDesktopWeb.AppLive do
                   expanded_projects={@expanded_projects}
                   vault_activity_visible={@vault_activity_visible}
                   total_item_count={@total_item_count}
+                  vault_unlocked={@vault_unlocked}
                 />
                 <p :if={@project_info} class="vault-flash ok">{@project_info}</p>
                 <p :if={@project_error} class="vault-flash err">{@project_error}</p>
@@ -828,17 +846,6 @@ defmodule SuchConfigDesktopWeb.AppLive do
                   show={@show_edit_folder_modal}
                   edit_folder_name={@edit_folder_name}
                   edit_folder_delete_confirm={@edit_folder_delete_confirm}
-                />
-                <ProjectVaultModals.new_folder_modal
-                  show={@show_new_folder_modal}
-                  folder_name={@folder_name}
-                  folder_description={@folder_description}
-                  folder_tags={@folder_tags}
-                  link_stage={@new_folder_link_stage}
-                  link_path={@new_folder_link_path}
-                  link_error={@new_folder_link_error}
-                  run_sentinel_scan={@new_folder_run_sentinel}
-                  pro_plan?={SuchConfigDesktop.ProjectVault.security_sentinel_license_enabled?()}
                 />
               </div>
               <div class={["h-full min-h-0 w-full", @current_page != :project_vault && "hidden"]}>
@@ -900,7 +907,6 @@ defmodule SuchConfigDesktopWeb.AppLive do
         </div>
         <.command_palette
           open={@command_palette_open}
-          query={@command_palette_query}
           cursor={@command_palette_cursor}
           secrets_vault_enabled={secrets_vault_enabled?()}
         />
@@ -919,6 +925,17 @@ defmodule SuchConfigDesktopWeb.AppLive do
         context={@generator_context}
         copied={@generator_copied}
         passphrase_words={Generator.passphrase_word_count(@generator_length)}
+      />
+      <ProjectVaultModals.new_folder_modal
+        show={@show_new_folder_modal}
+        folder_name={@folder_name}
+        folder_description={@folder_description}
+        folder_tags={@folder_tags}
+        link_stage={@new_folder_link_stage}
+        link_path={@new_folder_link_path}
+        link_error={@new_folder_link_error}
+        run_sentinel_scan={@new_folder_run_sentinel}
+        pro_plan?={SuchConfigDesktop.ProjectVault.security_sentinel_license_enabled?()}
       />
     </div>
     """
@@ -951,7 +968,6 @@ defmodule SuchConfigDesktopWeb.AppLive do
   defp close_command_palette_assigns(socket) do
     assign(socket,
       command_palette_open: false,
-      command_palette_query: "",
       command_palette_cursor: 0
     )
   end
@@ -999,12 +1015,11 @@ defmodule SuchConfigDesktopWeb.AppLive do
     socket |> palette_flat_items() |> length()
   end
 
-  defp palette_flat_items(socket) do
+  defp palette_flat_items(_socket) do
     alias SuchConfigDesktopWeb.Sc.CommandPalette.Commands
 
     secrets_vault_enabled?()
     |> Commands.groups()
-    |> Commands.filter(socket.assigns.command_palette_query)
     |> Commands.flat_items()
   end
 
@@ -1049,14 +1064,22 @@ defmodule SuchConfigDesktopWeb.AppLive do
   end
 
   defp run_palette_command(socket, "nav.projects") do
-    assign(socket, current_page: :projects)
+    socket
+    |> assign(current_page: :projects)
+    |> maybe_notify_page_visible(:projects)
+  end
+
+  defp run_palette_command(socket, "nav.settings") do
+    socket
+    |> assign(current_page: :settings)
+    |> maybe_notify_page_visible(:settings)
   end
 
   defp run_palette_command(socket, "nav.sec") do
     if secrets_vault_enabled?() do
       socket
       |> assign(current_page: :secrets_vault)
-      |> maybe_notify_secrets_vault_visible(:secrets_vault)
+      |> maybe_notify_page_visible(:secrets_vault)
     else
       socket
     end
@@ -1064,10 +1087,14 @@ defmodule SuchConfigDesktopWeb.AppLive do
 
   defp run_palette_command(socket, "nav.gen") do
     if secrets_vault_enabled?() do
-      socket
-      |> assign(current_page: :secrets_vault)
-      |> maybe_notify_secrets_vault_visible(:secrets_vault)
-      |> Generator.open(:standalone)
+      if socket.assigns[:show_generator_drawer] do
+        Generator.close(socket)
+      else
+        socket
+        |> assign(current_page: :secrets_vault)
+        |> maybe_notify_page_visible(:secrets_vault)
+        |> Generator.open(:standalone)
+      end
     else
       socket
     end
@@ -1093,23 +1120,79 @@ defmodule SuchConfigDesktopWeb.AppLive do
   end
 
   defp run_palette_command(socket, "new.proj") do
-    assign(socket, current_page: :projects)
+    socket =
+      case socket.assigns.current_page do
+        page when page in [:projects, :project_vault] -> socket
+        _ -> assign(socket, current_page: :projects)
+      end
+
+    {:noreply, socket} = FolderEvents.open_new_folder_modal(%{}, socket)
+    socket
   end
 
   defp run_palette_command(socket, id)
        when id in ["new.login", "new.api", "new.ssh", "new.note"] do
+    type = String.replace_prefix(id, "new.", "")
+
     if secrets_vault_enabled?() do
+      socket =
+        socket
+        |> assign(current_page: :secrets_vault)
+        |> maybe_notify_page_visible(:secrets_vault)
+
+      if is_binary(socket.assigns.vault_session_id) do
+        Phoenix.PubSub.broadcast(
+          SuchConfigDesktop.PubSub,
+          "secrets_vault:#{socket.assigns.vault_session_id}",
+          {:open_new_entry, type}
+        )
+      end
+
       socket
-      |> assign(current_page: :secrets_vault)
-      |> maybe_notify_secrets_vault_visible(:secrets_vault)
     else
       socket
     end
   end
 
+  defp run_palette_command(socket, "export") do
+    socket = navigate_to_project_vault(socket)
+
+    if connected?(socket) do
+      send(self(), {:palette_project_vault, :open_archive_export})
+    end
+
+    socket
+  end
+
+  defp run_palette_command(socket, "import") do
+    socket = navigate_to_project_vault(socket)
+
+    if connected?(socket) do
+      send(self(), {:palette_project_vault, :open_archive_import})
+    end
+
+    socket
+  end
+
   defp run_palette_command(socket, _), do: socket
 
-  defp maybe_notify_secrets_vault_visible(socket, :secrets_vault) do
+  defp broadcast_project_vault(socket, message) do
+    if is_binary(socket.assigns.vault_session_id) do
+      Phoenix.PubSub.broadcast(
+        SuchConfigDesktop.PubSub,
+        "project_vault:#{socket.assigns.vault_session_id}",
+        message
+      )
+    end
+
+    :ok
+  end
+
+  defp maybe_notify_page_visible(socket, :projects) do
+    ProjectsFormatting.refresh_project_entries(socket)
+  end
+
+  defp maybe_notify_page_visible(socket, :secrets_vault) do
     if secrets_vault_enabled?() and is_binary(socket.assigns.vault_session_id) do
       Phoenix.PubSub.broadcast(
         SuchConfigDesktop.PubSub,
@@ -1121,7 +1204,17 @@ defmodule SuchConfigDesktopWeb.AppLive do
     socket
   end
 
-  defp maybe_notify_secrets_vault_visible(socket, _), do: socket
+  defp maybe_notify_page_visible(socket, :settings) do
+    Phoenix.PubSub.broadcast(
+      SuchConfigDesktop.PubSub,
+      "settings:storage",
+      :refresh_storage_stats
+    )
+
+    socket
+  end
+
+  defp maybe_notify_page_visible(socket, _), do: socket
 
   defp navigate_to_project_vault(socket) do
     socket

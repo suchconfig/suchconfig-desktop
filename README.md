@@ -1,17 +1,27 @@
-# SuchConfig Desktop
+<p align="left">
+  <img src="design/sc-desktop/app-icon.svg" alt="SuchConfig" width="128" height="128" />
+</p>
 
-**Public Alpha** (`v1.0.0-alpha.5`) — local-first Project Vault + Secrets Vault.
+# SuchConfig
+
+**Public Alpha** (`v1.0.0-alpha.6`) — local-first Project Vault + Secrets Vault.
+
+**Your local-first source of truth for configs, secrets, and teams.**
+
+SuchConfig is the vault-and-collaboration product under the Such umbrella: project-scoped knowledge, secrets with placeholders, and credentials — offline by default, merge-friendly over time with CRDTs, with no cloud vault or sync of your note contents.
 
 > **Heavy active development.** This is the first public cut of the open-core CE. APIs, UX, and sync behavior will change. Expect rough edges; please read [Current status](#current-status) before depending on any path in production.
 
 Open core lets you audit the vault crypto and run a free local vault with user-owned backup (Trusted Folder) and opt-in LAN sync as those layers mature.
 
+**Coming soon:** signed & notarized macOS installers (DMG), plus the public launch of [suchconfig.io](https://suchconfig.io). Until then, build from source or grab unsigned alpha builds from [GitHub Releases](https://github.com/suchconfig/suchconfig-app/releases).
+
 | | |
 | --- | --- |
 | **License** | [Apache-2.0](LICENSE) |
 | **Platform** | **macOS primary**; Linux / Windows best-effort |
-| **Docs** | [docs/README.md](docs/README.md) · [Public Alpha roadmap](docs/public-alpha-roadmap.md) |
-| **Releases** | [GitHub Releases](https://github.com/suchconfig/suchconfig-desktop/releases) |
+| **Docs** | [docs/README.md](docs/README.md) · [Public Alpha roadmap](docs/public-alpha-roadmap.md) · [Keyboard shortcuts](docs/keyboard-shortcuts.md) |
+| **Releases** | [GitHub Releases](https://github.com/suchconfig/suchconfig-app/releases) |
 | **Site** | [suchconfig.io](https://suchconfig.io) |
 
 ---
@@ -63,8 +73,8 @@ A **local-first vault** for AI-augmented development: project configs, secrets, 
 `mix` is only on your PATH after Elixir is installed **and** your shell has loaded asdf (or another Elixir install). Run Mix commands from **`phoenix-app/`**, not the repo root.
 
 ```bash
-git clone https://github.com/suchconfig/suchconfig-desktop.git
-cd suchconfig-desktop
+git clone https://github.com/suchconfig/suchconfig-app.git
+cd suchconfig-app
 pnpm install
 cd phoenix-app
 # confirm: which mix   # should print a path; if not, open a new login shell or install Elixir via asdf
@@ -78,6 +88,8 @@ Phoenix-only (browser): `cd phoenix-app && mix setup && mix phx.server` → [htt
 
 Asset deps from repo root: `pnpm run phoenix-assets:install`.
 
+Once the app is running, `⌘K` / `Ctrl+K` opens the command palette. Full chord map: [docs/keyboard-shortcuts.md](docs/keyboard-shortcuts.md).
+
 > Public Alpha CE resolves Mix / Cargo against the **vendored** `vault_core` in this tree. Private founder builds may use vendored CE dependencies ship in-tree.
 
 ---
@@ -85,7 +97,7 @@ Asset deps from repo root: `pnpm run phoenix-assets:install`.
 ## Architecture (trust boundary)
 
 ```
-SuchConfig Desktop
+SuchConfig
 ├── Tauri shell (Rust) — OS bridges, LAN P2P transport, passkey bridges
 ├── Phoenix LiveView — Project Vault + Secrets Vault UI, SQLite
 └── vault_core — Loro CRDT + crypto (sole writer path for merge)
@@ -129,10 +141,10 @@ Public Alpha is early: prefer issues and small docs/UX/test PRs. Expect breaking
 
 ## Author
 
-Created by [zanuka](https://github.com/zanuka) (Mike Delucchi)
+Created by [zanuka](https://github.com/zanuka) (Michael Delucchi)
 
 ## License
 
-Copyright © 2026 Mike Delucchi
+Copyright © 2026 Michael Delucchi
 
 Licensed under the [Apache License, Version 2.0](LICENSE).

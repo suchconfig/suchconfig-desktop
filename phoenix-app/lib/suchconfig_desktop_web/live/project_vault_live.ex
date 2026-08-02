@@ -224,6 +224,7 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive do
 
     if vault_session_id do
       PubSub.subscribe(SuchConfigDesktop.PubSub, "vault:#{vault_session_id}")
+      PubSub.subscribe(SuchConfigDesktop.PubSub, "project_vault:#{vault_session_id}")
     end
 
     PubSub.subscribe(SuchConfigDesktop.PubSub, ProjectVault.merge_audit_pubsub_topic())
@@ -235,6 +236,8 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive do
 
   def handle_event("set_vault_password", params, socket),
     do: Passkey.set_vault_password(params, socket)
+
+  def handle_event("vault_key_stored", _params, socket), do: {:noreply, socket}
 
   def handle_event("create_folder", params, socket) do
     case FolderEvents.create(params, assign(socket, vault_activity_visible: false)) do
@@ -1029,6 +1032,18 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive do
 
   def handle_info(:broker_start_timeout, socket) do
     {:noreply, BrokerEvents.broker_start_timeout(socket)}
+  end
+
+  def handle_info(:open_archive_export, socket) do
+    ArchiveEvents.open_archive_export(%{}, socket)
+  end
+
+  def handle_info(:open_archive_import, socket) do
+    ArchiveEvents.open_archive_import(%{}, socket)
+  end
+
+  def handle_info(:open_new_folder_modal, socket) do
+    FolderEvents.open_new_folder_modal(%{}, socket)
   end
 
   def handle_info(:vault_merge_audit_updated, socket) do
