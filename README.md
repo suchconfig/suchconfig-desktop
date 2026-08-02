@@ -1,10 +1,10 @@
 # SuchConfig Desktop
 
-**Public Alpha** (`v0.1.0-alpha.1`) — local-first Project Vault + Secrets Vault.
+**Public Alpha** (`v0.1.0-alpha.2`) — local-first Project Vault + Secrets Vault.
 
 > **Heavy active development.** This is the first public cut of the open-core CE. APIs, UX, and sync behavior will change. Expect rough edges; please read [Current status](#current-status) before depending on any path in production.
 
-Open core lets you audit the vault crypto and run a free local vault with user-owned backup (Trusted Folder) and opt-in LAN sync as those layers mature. **Security Sentinel** and **Local Broker** are licensed Personal Pro add-ons (gated or absent in free CE).
+Open core lets you audit the vault crypto and run a free local vault with user-owned backup (Trusted Folder) and opt-in LAN sync as those layers mature.
 
 | | |
 | --- | --- |
@@ -24,22 +24,21 @@ Open core lets you audit the vault crypto and run a free local vault with user-o
 | Trusted Folder sync | Shipped — Free |
 | LAN Wi‑Fi P2P | Pairing + Handoff verified; incremental deltas and firewall-ON hardening still open — **not** finished LAN sync |
 | On-device vault importer | Planned — Free when formats ship; **not** in this alpha |
-| Security Sentinel / Local Broker | Personal Pro — gated or absent in free CE |
 | Signed / notarized macOS builds | Stated honestly on download pages when published |
 | Pricing | Hidden during Public Alpha |
 
-Detail: [docs/public-alpha-roadmap.md](docs/public-alpha-roadmap.md)
+Detail: [docs/public-alpha-roadmap.md](docs/public-alpha-roadmap.md) · [docs/open-core.md](docs/open-core.md)
 
 ---
 
-## Free vs Pro
+## What ships free
 
-| Free (Apache-2.0 CE) | Personal Pro |
+| Capability | Notes |
 | --- | --- |
-| Project Vault + Secrets Vault + encrypted archives | **Security Sentinel** (local supply-chain scan → Report Card) |
-| **Trusted Folder** (user-owned folder backup / merge) | **Local Broker** (scoped agent credential inject) |
-| **LAN Wi‑Fi P2P** (opt-in, same LAN; maturity above) | Sentinel → Broker policy proposals |
-| **Vault Importer** (on-device; when formats ship) | |
+| Project Vault + Secrets Vault + encrypted archives | Offline CRDT-backed store |
+| **Trusted Folder** | User-owned folder backup / merge |
+| **LAN Wi‑Fi P2P** | Opt-in, same LAN; maturity above |
+| **Vault Importer** | On-device; when formats ship |
 
 Never paywalled: Trusted Folder, LAN P2P, or Vault Importer (when it ships).
 
@@ -53,7 +52,7 @@ A **local-first vault** for AI-augmented development: project configs, secrets, 
 - Vault crypto / CRDT in open **`vault_core`** (vendored in public CE builds)
 - Multi-device continuity is **user-owned** (folder you choose, or opt-in LAN sync)
 
-**Not in this repo:** SuchUtils (parsers / generators — separate product), Broker CLI runtime, Sentinel scan engines.
+**Not in this repo:** SuchUtils (parsers / generators — separate product).
 
 ---
 
@@ -104,7 +103,7 @@ Dev (`pnpm run tauri:dev`) and installed release builds use **separate SQLite fi
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) (DCO, conventional commits). Good first issues: docs, UX, tests — not Sentinel engines or Broker inject.
+See [CONTRIBUTING.md](CONTRIBUTING.md) (DCO, conventional commits). Good first issues: docs, UX, tests.
 
 Public Alpha is early: prefer issues and small docs/UX/test PRs. Expect breaking changes between alpha tags.
 

@@ -6,7 +6,7 @@ SuchConfig Desktop exists so I can keep **project configs and secrets** in one *
 
 1. **Local trust** — Passwords, API keys, prompts, and project configs stay encrypted on my machine. No SuchConfig-hosted vault database.
 2. **One workspace** — Project Vault + Secrets Vault replace juggling notes, env files, and a separate password app for my daily work.
-3. **Useful free core** — Auditable CE (vault, Trusted Folder, LAN P2P as it matures) must stand alone; Security Sentinel and Local Broker stay Personal Pro.
+3. **Useful free core** — Auditable CE (vault, Trusted Folder, LAN P2P as it matures) must stand alone without paid add-ons.
 4. **Honest maturity** — Public Alpha means active development. Do not oversell unfinished sync or migration paths.
 5. **Explainable CRDTs** — Offline edits, merge without a central vault server, and clear local-first story in docs and demos.
 

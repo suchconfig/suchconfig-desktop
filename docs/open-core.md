@@ -2,7 +2,7 @@
 
 SuchConfig Desktop is a **local-first Project Vault + Secrets Vault**. Configs and credentials stay on your device. Multi-device continuity is **user-owned** (Trusted Folder and optional LAN Wi‑Fi sync)—not a SuchConfig cloud vault.
 
-**One-liner:** Open core audits the vault crypto and ships a free local vault with Trusted Folder and opt-in LAN sync as those layers mature; Security Sentinel and Local Broker are licensed Personal Pro add-ons.
+**One-liner:** Open core audits the vault crypto and ships a free local vault with Trusted Folder and opt-in LAN sync as those layers mature.
 
 > Public Alpha is under **heavy active development**. Features and UX will change between tags.
 
@@ -15,20 +15,10 @@ SuchConfig Desktop is a **local-first Project Vault + Secrets Vault**. Configs a
 | LAN Wi‑Fi P2P | Opt-in same-LAN sync; pairing + Handoff verified; incremental deltas still in progress |
 | Vault Importer | Planned Free on-device import — **not** in this alpha |
 
-## Personal Pro
-
-| Capability | Notes |
-| --- | --- |
-| Security Sentinel | Local supply-chain scan → Report Card → CRDT security manifest |
-| Local Broker | Scoped agent credential inject (CLI / IPC) |
-
-Pro engines (`sentinel_core`, `broker_core`, scanner sidecars, CLI inject runtime) are **not** in the public tree. CE may show upgrade cards with license flags default **false**.
-
 ## What this repo is
 
 - Auditable desktop CE + open `vault_core` (CRDT / crypto)
 - Trusted Folder and LAN P2P transport you can read
-- High-level Pro vision docs only
 
 ## What this repo is not
 
@@ -37,9 +27,10 @@ Pro engines (`sentinel_core`, `broker_core`, scanner sidecars, CLI inject runtim
 - Full history of private engineering (clean public start)
 - SuchUtils parsers/generators (separate product)
 - W3C DID / Verifiable Credentials (out of initial vision)
+- Licensed Personal Pro engines (absent from this tree)
 
 ## Maturity
 
-Public Alpha tag: **`v0.1.0-alpha.1`**. See [public-alpha-roadmap.md](./public-alpha-roadmap.md). Platform: **macOS primary**; Linux/Windows best-effort.
+Public Alpha tag: **`v0.1.0-alpha.2`**. See [public-alpha-roadmap.md](./public-alpha-roadmap.md). Platform: **macOS primary**; Linux/Windows best-effort.
 
 Pricing / Stripe storefront stays hidden during alpha; Free download + this GitHub tree are the public surface.

@@ -20,8 +20,6 @@ SuchConfig Desktop is **local-first**:
 - **Trusted Folder** writes encrypted snapshots to a folder **you** choose (iCloud / Dropbox / NAS / USB) — not a SuchConfig-hosted vault API.
 - Planned **Vault Importer** (not in Public Alpha) will parse and persist **on-device only**. Treat any manager export files as hot secrets; delete them after use.
 
-**Personal Pro** add-ons (Security Sentinel, Local Broker) introduce additional local tooling (supply-chain scan, scoped credential inject). Free CE builds ship with those capabilities gated or absent. Scanner sidecars and Broker inject engines are not part of the public CE trust story.
-
 ## LAN P2P
 
 Wi‑Fi / LAN sync is **opt-in**, **same-LAN only**, and requires **explicit pairing** before replication.

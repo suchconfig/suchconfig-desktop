@@ -5,6 +5,14 @@ All notable changes to SuchConfig Desktop (public CE) are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/) with pre-release tags for Public Alpha.
 
+## [0.1.0-alpha.2] — 2026-08-01
+
+### Changed
+
+- Slimmed Public Alpha docs: removed Pro vision docs (Sentinel / Local Broker) from CE allowlist
+- Denylisted root `ROADMAP-such-utils.md` so it no longer ships on GitHub
+- Softened public README / SECURITY / roadmap copy to focus on Free CE maturity
+
 ## [0.1.0-alpha.1] — 2026-08-01
 
 ### Added
@@ -18,8 +26,8 @@ Versioning follows [Semantic Versioning](https://semver.org/) with pre-release t
 
 ### Notes
 
-- Personal Pro (Security Sentinel + Local Broker) is gated or absent in free CE
 - Pricing page on suchconfig.io remains hidden during Public Alpha
 - macOS is the primary supported platform; Linux / Windows are best-effort
 
+[0.1.0-alpha.2]: https://github.com/suchconfig/suchconfig-desktop/releases/tag/v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/suchconfig/suchconfig-desktop/releases/tag/v0.1.0-alpha.1
