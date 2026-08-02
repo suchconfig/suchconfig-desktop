@@ -5,6 +5,19 @@ All notable changes to SuchConfig Desktop (public CE) are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/) with pre-release tags for Public Alpha.
 
+## [1.0.0-alpha.5] — 2026-08-02
+
+### Added
+
+- README section explaining why Elixir + Phoenix LiveView, Tauri 2, and Rust `vault_core` are split the way they are
+
+## [1.0.0-alpha.4] — 2026-08-02
+
+### Changed
+
+- Public tag line moved from `v0.1.0-alpha.*` to `v1.0.0-alpha.*` (same Public Alpha maturity; clearer semver for CE snapshots)
+- README authorship: Author section for [zanuka](https://github.com/zanuka); copyright line attributes Mike Delucchi
+
 ## [0.1.0-alpha.3] — 2026-08-01
 
 ### Fixed
@@ -35,6 +48,8 @@ Versioning follows [Semantic Versioning](https://semver.org/) with pre-release t
 - Pricing page on suchconfig.io remains hidden during Public Alpha
 - macOS is the primary supported platform; Linux / Windows are best-effort
 
+[1.0.0-alpha.5]: https://github.com/suchconfig/suchconfig-desktop/releases/tag/v1.0.0-alpha.5
+[1.0.0-alpha.4]: https://github.com/suchconfig/suchconfig-desktop/releases/tag/v1.0.0-alpha.4
 [0.1.0-alpha.3]: https://github.com/suchconfig/suchconfig-desktop/releases/tag/v0.1.0-alpha.3
 [0.1.0-alpha.2]: https://github.com/suchconfig/suchconfig-desktop/releases/tag/v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/suchconfig/suchconfig-desktop/releases/tag/v0.1.0-alpha.1

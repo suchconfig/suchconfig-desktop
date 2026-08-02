@@ -1,6 +1,6 @@
 # SuchConfig Desktop
 
-**Public Alpha** (`v0.1.0-alpha.3`) — local-first Project Vault + Secrets Vault.
+**Public Alpha** (`v1.0.0-alpha.5`) — local-first Project Vault + Secrets Vault.
 
 > **Heavy active development.** This is the first public cut of the open-core CE. APIs, UX, and sync behavior will change. Expect rough edges; please read [Current status](#current-status) before depending on any path in production.
 
