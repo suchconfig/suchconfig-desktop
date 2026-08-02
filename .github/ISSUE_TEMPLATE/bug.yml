@@ -1,0 +1,64 @@
+name: Bug report
+description: Report a problem in free CE (vault, Trusted Folder, P2P, importer)
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. For **security** issues, email security@suchconfig.io — do not file them here.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Project Vault / Secrets Vault
+        - Trusted Folder
+        - LAN P2P
+        - Vault Importer
+        - Install / macOS build
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / tag
+      placeholder: "v0.1.0-alpha.1"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      placeholder: "macOS 15.x, Apple Silicon"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      placeholder: Screenshots, logs (redact secrets and paths that expose vault contents)

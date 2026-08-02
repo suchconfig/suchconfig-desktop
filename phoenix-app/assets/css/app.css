@@ -1,0 +1,415 @@
+/* stylelint-disable */
+/* See the Tailwind configuration guide for advanced usage
+   https://tailwindcss.com/docs/configuration */
+
+@import 'tailwindcss' source(none);
+
+@source "../css";
+@source "../js";
+@source "../../lib/suchconfig_desktop_web";
+
+@import './sc.css';
+
+@theme {
+  --bg: oklch(0.165 0.006 65);
+  --bg-1: oklch(0.195 0.006 65);
+  --bg-2: oklch(0.225 0.006 65);
+  --bg-inset: oklch(0.145 0.006 65);
+  --line: oklch(0.3 0.006 65);
+  --line-soft: oklch(0.245 0.006 65);
+
+  --ink: oklch(0.955 0.008 80);
+  --ink-1: oklch(0.82 0.008 75);
+  --ink-2: oklch(0.62 0.008 70);
+  --ink-3: oklch(0.48 0.008 70);
+
+  --accent: oklch(0.78 0.135 65);
+  --accent-1: oklch(0.68 0.135 65);
+  --accent-ink: oklch(0.18 0.04 65);
+
+  --moss: oklch(0.74 0.1 145);
+  --moss-1: oklch(0.64 0.1 145);
+  --rust: oklch(0.66 0.16 30);
+  --plum: oklch(0.7 0.09 320);
+
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 8px 30px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 0 0 1px rgba(255, 255, 255, 0.02) inset, 0 24px 60px rgba(0, 0, 0, 0.45);
+  --ring: 0 0 0 3px color-mix(in oklch, var(--accent) 28%, transparent);
+
+  --r-1: 6px;
+  --r-2: 10px;
+  --r-3: 14px;
+  --r-4: 20px;
+
+  --pad-x: 28px;
+  --pad-y: 24px;
+  --row-h: 56px;
+  --gap: 16px;
+  --field-h: 40px;
+  --font-ui: 14px;
+  --font-sm: 12.5px;
+
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-serif: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+}
+
+[data-density='compact'] {
+  --pad-x: 18px;
+  --pad-y: 14px;
+  --row-h: 44px;
+  --gap: 10px;
+  --field-h: 34px;
+  --font-ui: 13px;
+  --font-sm: 11.5px;
+}
+
+[data-density='comfy'] {
+  --pad-x: 36px;
+  --pad-y: 32px;
+  --row-h: 68px;
+  --gap: 22px;
+  --field-h: 46px;
+  --font-ui: 14.5px;
+  --font-sm: 13px;
+}
+
+[data-theme='light'] {
+  --bg: oklch(0.974 0.006 85);
+  --bg-1: oklch(0.955 0.006 85);
+  --bg-2: oklch(0.93 0.006 85);
+  --bg-inset: oklch(0.99 0.006 85);
+  --line: oklch(0.84 0.006 85);
+  --line-soft: oklch(0.9 0.006 85);
+
+  --ink: oklch(0.2 0.008 80);
+  --ink-1: oklch(0.34 0.008 80);
+  --ink-2: oklch(0.48 0.008 80);
+  --ink-3: oklch(0.62 0.008 80);
+
+  --accent: oklch(0.62 0.135 55);
+  --accent-1: oklch(0.55 0.135 55);
+  --accent-ink: oklch(0.98 0.02 65);
+
+  --moss: oklch(0.52 0.09 145);
+  --moss-1: oklch(0.45 0.09 145);
+  --rust: oklch(0.55 0.16 30);
+
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 4px 14px rgba(60, 40, 20, 0.06);
+  --shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.04) inset, 0 16px 40px rgba(60, 40, 20, 0.1);
+}
+
+/* Lucide icons — installed via mix.exs and compiled by assets/vendor/lucide.js */
+@plugin "../vendor/lucide";
+
+/* daisyUI Tailwind Plugin. You can update this file by fetching the latest version with:
+   curl -sLO https://github.com/saadeghi/daisyui/releases/latest/download/daisyui.js
+   Make sure to look at the daisyUI changelog: https://daisyui.com/docs/changelog/ */
+
+/* @plugin "../vendor/daisyui"; */
+
+/* Add variants based on LiveView classes */
+@custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
+@custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
+@custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
+
+/* Use the data attribute for dark mode  */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* Make LiveView wrapper divs transparent for layout */
+[data-phx-session],
+[data-phx-teleported-src] {
+  display: contents;
+}
+
+/* This file is for your main application CSS */
+
+html {
+  text-rendering: optimizeLegibility;
+  height: 100%;
+  min-height: 100vh;
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  height: 100%;
+}
+
+body > [data-phx-main] {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-ui);
+  color: var(--ink);
+  background: var(--bg);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-feature-settings: 'ss01', 'cv11';
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Parsing progress animation */
+@keyframes parsing-progress {
+  0% {
+    width: 5%;
+  }
+  10% {
+    width: 15%;
+  }
+  30% {
+    width: 40%;
+  }
+  50% {
+    width: 60%;
+  }
+  70% {
+    width: 75%;
+  }
+  85% {
+    width: 88%;
+  }
+  95% {
+    width: 94%;
+  }
+  100% {
+    width: 95%;
+  }
+}
+
+.animate-parsing-progress {
+  animation: parsing-progress 2.5s ease-out forwards;
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+#markdown-workspace [data-md-panes] {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  #markdown-workspace[data-mode='split'] [data-md-panes] {
+    flex-direction: row;
+  }
+}
+
+#markdown-workspace[data-mode='edit'] [data-md-preview-wrap] {
+  display: none !important;
+}
+
+#markdown-workspace[data-mode='preview'] [data-md-editor-wrap] {
+  display: none !important;
+}
+
+#markdown-workspace [data-md-editor-wrap],
+#markdown-workspace [data-md-preview-wrap] {
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.markdown-preview-content {
+  color: rgb(51 65 85);
+}
+
+[data-theme='dark'] .markdown-preview-content {
+  color: rgb(203 213 225);
+}
+
+.markdown-preview-content h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.markdown-preview-content h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0.65rem 0 0.3rem;
+}
+
+.markdown-preview-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.markdown-preview-content p {
+  margin: 0.35rem 0;
+}
+
+.markdown-preview-content ul,
+.markdown-preview-content ol {
+  margin: 0.35rem 0 0.35rem 1.1rem;
+  padding-left: 0.25rem;
+}
+
+.markdown-preview-content blockquote {
+  margin: 0.5rem 0;
+  padding-left: 0.65rem;
+  border-left: 3px solid rgb(148 163 184);
+  color: rgb(71 85 105);
+}
+
+[data-theme='dark'] .markdown-preview-content blockquote {
+  border-left-color: rgb(100 116 139);
+  color: rgb(148 163 184);
+}
+
+.markdown-preview-content pre {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  background: #282c34;
+  color: #abb2bf;
+  font-size: 0.75rem;
+}
+
+.markdown-preview-content code {
+  font-size: 0.8em;
+}
+
+.markdown-preview-content pre code.hljs {
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.markdown-preview-content .hljs-comment,
+.markdown-preview-content .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+
+.markdown-preview-content .hljs-doctag,
+.markdown-preview-content .hljs-formula,
+.markdown-preview-content .hljs-keyword {
+  color: #c678dd;
+}
+
+.markdown-preview-content .hljs-deletion,
+.markdown-preview-content .hljs-name,
+.markdown-preview-content .hljs-section,
+.markdown-preview-content .hljs-selector-tag,
+.markdown-preview-content .hljs-subst {
+  color: #e06c75;
+}
+
+.markdown-preview-content .hljs-literal {
+  color: #56b6c2;
+}
+
+.markdown-preview-content .hljs-addition,
+.markdown-preview-content .hljs-attribute,
+.markdown-preview-content .hljs-meta .hljs-string,
+.markdown-preview-content .hljs-regexp,
+.markdown-preview-content .hljs-string {
+  color: #98c379;
+}
+
+.markdown-preview-content .hljs-attr,
+.markdown-preview-content .hljs-number,
+.markdown-preview-content .hljs-selector-attr,
+.markdown-preview-content .hljs-selector-class,
+.markdown-preview-content .hljs-selector-pseudo,
+.markdown-preview-content .hljs-template-variable,
+.markdown-preview-content .hljs-type,
+.markdown-preview-content .hljs-variable {
+  color: #d19a66;
+}
+
+.markdown-preview-content .hljs-bullet,
+.markdown-preview-content .hljs-link,
+.markdown-preview-content .hljs-meta,
+.markdown-preview-content .hljs-selector-id,
+.markdown-preview-content .hljs-symbol,
+.markdown-preview-content .hljs-title {
+  color: #61aeee;
+}
+
+.markdown-preview-content .hljs-built_in,
+.markdown-preview-content .hljs-class .hljs-title,
+.markdown-preview-content .hljs-title.class_ {
+  color: #e6c07b;
+}
+
+.markdown-preview-content .hljs-emphasis {
+  font-style: italic;
+}
+
+.markdown-preview-content .hljs-strong {
+  font-weight: 700;
+}
+
+.markdown-preview-content .hljs-link {
+  text-decoration: underline;
+}
+
+.markdown-preview-content :not(pre) > code {
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+  background: rgb(241 245 249);
+  color: rgb(15 23 42);
+}
+
+[data-theme='dark'] .markdown-preview-content :not(pre) > code {
+  background: rgb(30 41 59);
+  color: rgb(226 232 240);
+}
+
+.markdown-preview-content a {
+  color: rgb(79 70 229);
+  text-decoration: underline;
+}
+
+[data-theme='dark'] .markdown-preview-content a {
+  color: rgb(165 180 252);
+}
+
+.markdown-preview-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin: 0.5rem 0;
+}
+
+.markdown-preview-content th,
+.markdown-preview-content td {
+  border: 1px solid rgb(203 213 225);
+  padding: 0.25rem 0.4rem;
+}
+
+[data-theme='dark'] .markdown-preview-content th,
+[data-theme='dark'] .markdown-preview-content td {
+  border-color: rgb(71 85 105);
+}

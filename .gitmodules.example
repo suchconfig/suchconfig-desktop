@@ -1,0 +1,18 @@
+# Example .gitmodules file (NOT CURRENTLY USED)
+#
+# This project uses an embedded structure where phoenix-app/ is committed
+# directly to the repository, not as a submodule.
+#
+# If you wanted to switch to a submodule approach, you would:
+# 1. Create this file with the submodule configuration
+# 2. Remove phoenix-app/ from the main repository
+# 3. Add it back as a submodule
+#
+# Example configuration (if using submodules):
+# [submodule "phoenix-app"]
+# 	path = phoenix-app
+# 	url = <suchconfig-desktop-repo-url>
+# 	branch = main
+#
+# See docs/submodule-setup.md for more information about the submodule
+# approach (which is not currently used).

@@ -1,0 +1,37 @@
+{
+  "name": "suchconfig",
+  "version": "0.1.1",
+  "description": "SuchConfig Desktop",
+  "type": "module",
+  "scripts": {
+    "tauri": "node ./scripts/tauri-cli.mjs",
+    "tauri:dev": "tauri dev --config src-tauri/tauri.dev.conf.json",
+    "tauri:build": "node ./scripts/tauri-cli.mjs build",
+    "generate-types": "cd src-tauri && cargo run --bin generate-types",
+    "start-phoenix-dev": "node scripts/start-phoenix-dev.js",
+    "build-phoenix": "node scripts/build-phoenix.js",
+    "stop-phoenix": "node scripts/stop-phoenix.js",
+    "test-integration": "node scripts/test-integration.js",
+    "create-phoenix-app": "node scripts/create-phoenix-app.js",
+    "kill-port": "node scripts/kill-port.js",
+    "clean-start": "pnpm run kill-port && pnpm run tauri:dev",
+    "phoenix-assets:install": "pnpm --filter @suchconfig/phoenix-assets install",
+    "lint:css": "stylelint 'phoenix-app/assets/css/**/*.css'",
+    "lint:css:fix": "stylelint 'phoenix-app/assets/css/**/*.css' --fix",
+    "desktop:release:build": "node scripts/desktop-release-build.mjs",
+    "desktop:reset-prod-state": "node scripts/reset-prod-desktop-state.mjs",
+    "tauri:icon": "node scripts/generate-app-icons.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "stylelint": "^16.25.0",
+    "stylelint-config-standard": "^39.0.1",
+    "stylelint-config-tailwindcss": "^1.0.0"
+  },
+  "packageManager": "pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977"
+}

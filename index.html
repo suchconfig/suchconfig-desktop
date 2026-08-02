@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuchConfig - Desktop App</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f8fafc;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .status {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+
+      .status-connected {
+        background: #10b981;
+      }
+
+      .status-disconnected {
+        background: #ef4444;
+      }
+
+      .status-connecting {
+        background: #f59e0b;
+      }
+
+      .phoenix-frame {
+        width: 100%;
+        height: 600px;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button:hover {
+        background: #2563eb;
+      }
+
+      button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+      }
+
+      .log {
+        background: #1f2937;
+        color: #f9fafb;
+        padding: 15px;
+        border-radius: 6px;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>SuchConfig Desktop</h1>
+        <p>Tauri Shell + Phoenix LiveView Integration</p>
+      </div>
+
+      <div class="status">
+        <h3>
+          <span class="status-indicator status-disconnected"
+            id="statusIndicator"></span>
+          <span id="statusText">Disconnected</span>
+        </h3>
+        <p id="statusMessage">Click "Start Phoenix Server" to begin</p>
+      </div>
+
+      <div class="controls">
+        <button id="startBtn">Start Phoenix Server</button>
+        <button id="stopBtn" disabled>Stop Phoenix Server</button>
+        <button id="selectFileBtn" disabled>Select File</button>
+        <button id="refreshBtn" disabled>Refresh</button>
+      </div>
+
+      <iframe id="phoenixFrame" class="phoenix-frame"
+        style="display: none;"></iframe>
+
+      <div class="log" id="logOutput">Ready to start Phoenix LiveView
+        server...\n</div>
+    </div>
+
+    <script>
+      const { invoke } = window.__TAURI__.core;
+
+      let phoenixRunning = false;
+      const statusIndicator = document.getElementById('statusIndicator');
+      const statusText = document.getElementById('statusText');
+      const statusMessage = document.getElementById('statusMessage');
+      const phoenixFrame = document.getElementById('phoenixFrame');
+      const logOutput = document.getElementById('logOutput');
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const selectFileBtn = document.getElementById('selectFileBtn');
+      const refreshBtn = document.getElementById('refreshBtn');
+
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        logOutput.textContent += `[${timestamp}] ${message}\n`;
+        logOutput.scrollTop = logOutput.scrollHeight;
+      }
+
+      function updateStatus(status, message) {
+        statusIndicator.className = `status-indicator status-${status}`;
+        statusText.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusMessage.textContent = message;
+      }
+
+      async function startPhoenixServer() {
+        try {
+          updateStatus('connecting', 'Starting Phoenix LiveView server...');
+          startBtn.disabled = true;
+
+          log('Starting Phoenix LiveView server...');
+          const result = await invoke('start_phoenix_server');
+          log(`Server response: ${result}`);
+
+          setTimeout(() => {
+            phoenixRunning = true;
+            updateStatus('connected', 'Phoenix LiveView server is running');
+            phoenixFrame.src = 'http://localhost:4000';
+            phoenixFrame.style.display = 'block';
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            selectFileBtn.disabled = false;
+            refreshBtn.disabled = false;
+            log('Phoenix LiveView server started successfully!');
+          }, 3000);
+
+        } catch (error) {
+          log(`Error starting Phoenix server: ${error}`);
+          updateStatus('disconnected', 'Failed to start Phoenix server');
+          startBtn.disabled = false;
+        }
+      }
+
+      async function stopPhoenixServer() {
+        try {
+          log('Stopping Phoenix LiveView server...');
+          phoenixRunning = false;
+          updateStatus('disconnected', 'Phoenix LiveView server stopped');
+          phoenixFrame.style.display = 'none';
+          phoenixFrame.src = '';
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+          selectFileBtn.disabled = true;
+          refreshBtn.disabled = true;
+          log('Phoenix LiveView server stopped');
+        } catch (error) {
+          log(`Error stopping Phoenix server: ${error}`);
+        }
+      }
+
+      async function selectFile() {
+        try {
+          log('Opening file dialog...');
+          const result = await invoke('select_file');
+          log(`Selected file: ${result}`);
+        } catch (error) {
+          log(`Error selecting file: ${error}`);
+        }
+      }
+
+      function refreshPhoenix() {
+        if (phoenixRunning) {
+          log('Refreshing Phoenix LiveView...');
+          phoenixFrame.src = phoenixFrame.src;
+        }
+      }
+
+      async function getAppInfo() {
+        try {
+          const info = await invoke('get_app_info');
+          log(`App Info: ${JSON.stringify(info, null, 2)}`);
+        } catch (error) {
+          log(`Error getting app info: ${error}`);
+        }
+      }
+
+      startBtn.addEventListener('click', startPhoenixServer);
+      stopBtn.addEventListener('click', stopPhoenixServer);
+      selectFileBtn.addEventListener('click', selectFile);
+      refreshBtn.addEventListener('click', refreshPhoenix);
+
+      log('SuchConfig Desktop initialized');
+      getAppInfo();
+    </script>
+  </body>
+
+</html>

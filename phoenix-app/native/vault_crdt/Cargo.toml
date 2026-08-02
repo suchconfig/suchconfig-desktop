@@ -1,0 +1,17 @@
+[package]
+name = "vault_crdt"
+version = "0.1.0"
+edition = "2021"
+description = "Rustler NIF bridging Elixir to suchconfig_vault_core (Loro-backed CRDT)"
+license = "Apache-2.0"
+
+[lib]
+name = "vault_crdt"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.37"
+suchconfig_vault_core = { path = "../../../native/vault_core" }
+serde_json = "1"
+
+[workspace]

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SuchConfig",
+  "version": "0.1.1",
+  "identifier": "io.suchconfig",
+  "build": {
+    "frontendDist": "../phoenix-app/priv/static",
+    "beforeDevCommand": "pnpm run start-phoenix-dev",
+    "beforeBuildCommand": "node scripts/phoenix-prod-build.mjs"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "SuchConfig",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "maximized": true,
+        "url": "http://localhost:4000",
+        "dragDropEnabled": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' ipc: http://ipc.localhost; connect-src 'self' ws://localhost:* http://localhost:* ipc: http://ipc.localhost; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "app", "dmg"],
+    "category": "Productivity",
+    "macOS": {
+      "entitlements": "./Entitlements.plist"
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "bundle-resources/phoenix-sidecar/suchconfig_desktop/": "phoenix-sidecar/suchconfig_desktop/"
+    }
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
+  }
+}

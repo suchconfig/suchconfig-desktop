@@ -1,0 +1,56 @@
+# Secrets & credentials
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/*.pem
+**/*.key
+**/id_rsa
+**/id_ed25519
+**/credentials.json
+**/secrets.json
+**/.secrets
+**/secrets/
+**/*.suchvault
+
+# Node / frontend build
+node_modules/
+**/node_modules/
+dist/
+build/
+.svelte-kit/
+
+# Phoenix / Elixir
+phoenix-app/_build/
+phoenix-app/deps/
+phoenix-app/cover/
+phoenix-app/doc/
+phoenix-app/.elixir_ls/
+phoenix-app/priv/static/assets/
+phoenix-app/priv/static/cache_manifest.json
+phoenix-app/priv/repo/*.db
+phoenix-app/priv/repo/*.db-shm
+phoenix-app/priv/repo/*.db-wal
+phoenix-app/priv/native/
+phoenix-app/native/**/target/
+
+# Tauri / Rust
+src-tauri/target/
+**/target/
+
+# Local runtime / agent state
+broker.sock
+**/*.sock
+.suchconfig/
+*.manifest.json
+
+# OS & editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.log
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

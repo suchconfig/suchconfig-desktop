@@ -1,0 +1,7 @@
+# Ignore generated files
+phoenix-app/priv/static/assets/css/
+phoenix-app/deps/
+node_modules/
+
+# Ignore vendor files
+phoenix-app/assets/vendor/

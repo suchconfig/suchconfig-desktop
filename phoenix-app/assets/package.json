@@ -1,0 +1,9 @@
+{
+  "name": "@suchconfig/phoenix-assets",
+  "private": true,
+  "dependencies": {
+    "dompurify": "^3.2.4",
+    "highlight.js": "^11.10.0",
+    "marked": "^15.0.7"
+  }
+}

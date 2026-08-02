@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose an improvement to free CE (docs/UX/tests preferred)
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Personal Pro engines (Security Sentinel scanners, Local Broker inject) are **out of scope** for public CE. Prefer docs, UX, tests, and free vault flows — see CONTRIBUTING.md.
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Free CE (vault / Trusted Folder / P2P / importer)
+        - Docs / DX
+        - Pro upgrade UX only (no engines)
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What pain does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What would you like to change?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
