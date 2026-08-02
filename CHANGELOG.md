@@ -5,6 +5,12 @@ All notable changes to SuchConfig Desktop (public CE) are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/) with pre-release tags for Public Alpha.
 
+## [0.1.0-alpha.3] — 2026-08-01
+
+### Fixed
+
+- CE publish refreshes `phoenix-app/mix.lock` off Hex `zanukalabs/suchconfig_core` so GitHub Actions `mix deps.get` uses the vendored path dep only (no org auth)
+
 ## [0.1.0-alpha.2] — 2026-08-01
 
 ### Changed
@@ -29,5 +35,6 @@ Versioning follows [Semantic Versioning](https://semver.org/) with pre-release t
 - Pricing page on suchconfig.io remains hidden during Public Alpha
 - macOS is the primary supported platform; Linux / Windows are best-effort
 
+[0.1.0-alpha.3]: https://github.com/suchconfig/suchconfig-desktop/releases/tag/v0.1.0-alpha.3
 [0.1.0-alpha.2]: https://github.com/suchconfig/suchconfig-desktop/releases/tag/v0.1.0-alpha.2
 [0.1.0-alpha.1]: https://github.com/suchconfig/suchconfig-desktop/releases/tag/v0.1.0-alpha.1

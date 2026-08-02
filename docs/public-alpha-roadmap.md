@@ -2,7 +2,7 @@
 
 Short public view of what Public Alpha means and what comes next. Strategy summary: [open-core.md](./open-core.md).
 
-**Tag:** `v0.1.0-alpha.2` · **Label:** Public Alpha (not “public beta” yet)
+**Tag:** `v0.1.0-alpha.3` · **Label:** Public Alpha (not “public beta” yet)
 
 > Under **heavy active development**. This roadmap is directional; nothing here is a ship promise for the current tag.
 

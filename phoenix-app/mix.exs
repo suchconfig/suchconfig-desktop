@@ -87,7 +87,6 @@ defmodule SuchConfigDesktop.MixProject do
       # {:ash_sqlite, "~> 1.0"},
       # {:ash_json_api, "~> 0.1"},
       {:suchconfig_core, path: "../vendor/suchconfig_core", override: true},
-      # {:suchconfig_core, path: "../vendor/suchconfig_core", override: true},
       {:makeup, "~> 1.2"},
       {:makeup_json, "~> 1.0"},
       {:rustler, "~> 0.37.3"}

@@ -31,6 +31,6 @@ SuchConfig Desktop is a **local-first Project Vault + Secrets Vault**. Configs a
 
 ## Maturity
 
-Public Alpha tag: **`v0.1.0-alpha.2`**. See [public-alpha-roadmap.md](./public-alpha-roadmap.md). Platform: **macOS primary**; Linux/Windows best-effort.
+Public Alpha tag: **`v0.1.0-alpha.3`**. See [public-alpha-roadmap.md](./public-alpha-roadmap.md). Platform: **macOS primary**; Linux/Windows best-effort.
 
 Pricing / Stripe storefront stays hidden during alpha; Free download + this GitHub tree are the public surface.
