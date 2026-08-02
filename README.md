@@ -95,6 +95,20 @@ Vault load / save / merge does **not** use the network. Optional license checks 
 
 ---
 
+## Why Elixir (and this stack)
+
+**Elixir** is the primary application language because SuchConfig is a long-running local product: vault UI, domain logic, SQLite, and orchestration need fault-tolerant concurrency more than a single-process SPA. OTP supervision, immutable data, and `{:ok, _}` / `{:error, _}` pipelines keep product code explicit and crash-isolated inside the embedded BEAM sidecar.
+
+| Layer | Role |
+| --- | --- |
+| **Elixir + Phoenix LiveView** | Product surface — Project Vault / Secrets Vault UI, forms, PubSub-driven updates, and most domain orchestration over local SQLite |
+| **Tauri 2 (Rust shell)** | Desktop trust boundary — OS bridges, keychain / passkeys, file dialogs, LAN P2P transport, window lifecycle |
+| **Rust (`vault_core`)** | Hot path — Loro CRDT merge, vault crypto, and encrypted archive packing (sole writer path for merge) |
+
+LiveView keeps the UI server-driven with a thin client, so we ship less custom frontend state for a security-sensitive vault. Rust stays where systems work belongs (native APIs, crypto, CRDT). Elixir stays where product logic and realtime local UX belong. That split is intentional — not “Elixir for everything.”
+
+---
+
 ## Database note
 
 Dev (`pnpm run tauri:dev`) and installed release builds use **separate SQLite files**. Missing data after switching modes is usually two databases — not a sync bug. See docs under [docs/README.md](docs/README.md).
