@@ -113,8 +113,12 @@ Public Alpha is early: prefer issues and small docs/UX/test PRs. Expect breaking
 
 ---
 
+## Author
+
+Created by [zanuka](https://github.com/zanuka) (Mike Delucchi)
+
 ## License
 
-Copyright © 2026 SuchConfig contributors.
+Copyright © 2026 Mike Delucchi
 
 Licensed under the [Apache License, Version 2.0](LICENSE).
