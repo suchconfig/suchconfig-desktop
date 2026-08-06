@@ -293,6 +293,7 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.Modals do
   attr :link_stage, :atom, default: :idle
   attr :link_path, :string, default: nil
   attr :link_error, :string, default: nil
+  attr :error, :string, default: nil
   attr :run_sentinel_scan, :boolean, default: false
   attr :pro_plan?, :boolean, default: false
 
@@ -315,6 +316,9 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.Modals do
         class="modal-form"
       >
         <.modal_body>
+          <div :if={@error} class="vault-flash err" role="alert" id="new-folder-form-error">
+            {@error}
+          </div>
           <input
             type="text"
             name="folder_name"

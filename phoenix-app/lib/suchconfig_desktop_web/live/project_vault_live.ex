@@ -231,6 +231,19 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive do
 
     socket = BrokerEvents.assign_broker_state(socket)
 
+    socket =
+      case pending_link_project_from_session(session) do
+        {path, run_sentinel?} ->
+          if connected?(socket) do
+            send(self(), {:start_pending_link_project, path, run_sentinel?})
+          end
+
+          socket
+
+        nil ->
+          socket
+      end
+
     {:ok, socket}
   end
 
@@ -1011,6 +1024,7 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive do
           link_stage={@new_folder_link_stage}
           link_path={@new_folder_link_path}
           link_error={@new_folder_link_error}
+          error={@error}
           run_sentinel_scan={@new_folder_run_sentinel}
           pro_plan?={@security_sentinel_license_enabled?}
         />
@@ -1044,6 +1058,17 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive do
 
   def handle_info(:open_new_folder_modal, socket) do
     FolderEvents.open_new_folder_modal(%{}, socket)
+  end
+
+  def handle_info({:start_pending_link_project, path, run_sentinel?}, socket) do
+    {:noreply, socket} =
+      VaultItemEvents.open_link_project_modal_for_path(path, socket, run_sentinel: run_sentinel?)
+
+    if socket.assigns[:embedded] == true and is_pid(socket.parent_pid) do
+      send(socket.parent_pid, :clear_pending_link_project)
+    end
+
+    {:noreply, socket}
   end
 
   def handle_info(:vault_merge_audit_updated, socket) do
@@ -1110,6 +1135,17 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive do
 
       _ ->
         List.first(folders)
+    end
+  end
+
+  defp pending_link_project_from_session(session) do
+    path = session["pending_link_project_path"]
+    run_sentinel? = session["pending_link_project_run_sentinel"] == true
+
+    if is_binary(path) and String.trim(path) != "" do
+      {String.trim(path), run_sentinel?}
+    else
+      nil
     end
   end
 

@@ -37,7 +37,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 feat: add Trusted Folder empty-state copy
 fix: handle missing peer during P2P pairing cancel
-docs: clarify importer Bitwarden export steps
+docs: clarify importer JSON export steps
 test: cover secrets vault reveal cancel
 ```
 

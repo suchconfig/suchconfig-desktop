@@ -35,11 +35,74 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.ViewDataTest do
             item_tags: [],
             crdt_enabled?: Crdt.available?(),
             embedded: false,
-            all_items: ViewData.not_loaded()
+            all_items: ViewData.not_loaded(),
+            all_tags_by_item_id: ViewData.not_loaded()
           },
           extra
         )
     }
+  end
+
+  @tag :crdt_nif_required
+  test "assign_view_data caches decrypted tags across folder switches" do
+    {:ok, folder_a} =
+      SecretsVault.create_folder(%{name: "Tags cache A", description: nil})
+
+    {:ok, folder_b} =
+      SecretsVault.create_folder(%{name: "Tags cache B", description: nil})
+
+    {:ok, item_a} =
+      SecretsVault.save_item(
+        %{
+          title: "Tagged A",
+          kind: "password",
+          secrets_vault_folder_id: folder_a.id,
+          body: "secret-a",
+          frontmatter: %{"tags" => "Work,Production"}
+        },
+        @password
+      )
+
+    {:ok, item_b} =
+      SecretsVault.save_item(
+        %{
+          title: "Tagged B",
+          kind: "api_key",
+          secrets_vault_folder_id: folder_b.id,
+          body: "secret-b",
+          frontmatter: %{"tags" => "Staging"}
+        },
+        @password
+      )
+
+    s1 =
+      socket(%{
+        items: SecretsVault.list_items(folder_a.id),
+        selected_folder_id: folder_a.id,
+        folders: SecretsVault.list_folders()
+      })
+      |> ViewData.assign_view_data(refresh_all_items: true)
+
+    assert is_map(s1.assigns.all_tags_by_item_id)
+    cached_tags = s1.assigns.all_tags_by_item_id
+    assert Map.get(cached_tags, item_a.id) == ["Work", "Production"]
+    assert Map.get(s1.assigns.tags_by_item_id, item_a.id) == ["Work", "Production"]
+
+    s2 =
+      %{
+        s1
+        | assigns:
+            Map.merge(s1.assigns, %{
+              items: SecretsVault.list_items(folder_b.id),
+              selected_folder_id: folder_b.id
+            })
+      }
+      |> ViewData.assign_view_data()
+
+    assert s2.assigns.all_tags_by_item_id == cached_tags
+    assert Map.get(s2.assigns.tags_by_item_id, item_b.id) == ["Staging"]
+    refute Map.has_key?(s2.assigns.tags_by_item_id, item_a.id)
+    assert "Staging" in s2.assigns.tag_suggestions
   end
 
   @tag :crdt_nif_required

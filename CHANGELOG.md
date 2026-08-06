@@ -3,7 +3,25 @@
 All notable changes to SuchConfig (public CE) are documented here.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versioning follows [Semantic Versioning](https://semver.org/) with pre-release tags for Public Alpha.
+Versioning follows [Semantic Versioning](https://semver.org/) with Public Alpha pre-release tags (`v1.0.0-alpha.N`).
+
+## [1.0.0-alpha.7] — 2026-08-06
+
+### Added
+
+- On-device Vault Importer for Secrets Vault: password-manager JSON export → preview, duplicate keep/overwrite, Import all
+- Secrets Vault folder settings (rename / delete with Deleted Items or permanent purge) and entry activity history
+- Secrets Vault entry detail: secret bodies masked by default (including SSH) behind the reveal toggle
+
+### Fixed
+
+- New project with a selected folder: open Link Project preview and start the disk scan so import summary is reviewable before Confirm
+- AI ignore scaffolds: detect stack from manifests / `.gitignore`, merge project-specific patterns, and surface duplicate folder-name errors in the New project modal
+
+### Changed
+
+- README: clearer local-first developer positioning for the Public Alpha CE
+- Public Alpha status: first password-manager JSON import path is dogfood-ready; additional export formats remain planned
 
 ## [1.0.0-alpha.6] — 2026-08-02
 
@@ -57,7 +75,7 @@ Versioning follows [Semantic Versioning](https://semver.org/) with pre-release t
 - Public Alpha open-core snapshot: Project Vault + Secrets Vault (local-first, CRDT)
 - Trusted Folder sync (Free)
 - LAN Wi‑Fi P2P: pairing + Handoff (Free; incremental deltas still in progress)
-- Vault Importer surface (Free; wizard incomplete — Bitwarden-first roadmap)
+- Vault Importer surface (Free; wizard incomplete — password-manager JSON import roadmap)
 - Apache-2.0 LICENSE, CONTRIBUTING (DCO), CODE_OF_CONDUCT, SECURITY
 - Public docs index, Public Alpha roadmap, issue templates, minimal GitHub Actions CI
 
@@ -66,6 +84,7 @@ Versioning follows [Semantic Versioning](https://semver.org/) with pre-release t
 - Pricing page on suchconfig.io remains hidden during Public Alpha
 - macOS is the primary supported platform; Linux / Windows are best-effort
 
+[1.0.0-alpha.7]: https://github.com/suchconfig/suchconfig-app/releases/tag/v1.0.0-alpha.7
 [1.0.0-alpha.6]: https://github.com/suchconfig/suchconfig-app/releases/tag/v1.0.0-alpha.6
 [1.0.0-alpha.5]: https://github.com/suchconfig/suchconfig-app/releases/tag/v1.0.0-alpha.5
 [1.0.0-alpha.4]: https://github.com/suchconfig/suchconfig-app/releases/tag/v1.0.0-alpha.4

@@ -2,7 +2,7 @@
 
 Public Alpha docs for the open-core CE. Product overview: root [README.md](../README.md). Strategy (short): [open-core.md](./open-core.md).
 
-**Free:** Project Vault + Secrets Vault + Trusted Folder + LAN Wi‑Fi P2P (as maturity allows). On-device vault importer is planned Free — not in this alpha.
+**Free:** Project Vault + Secrets Vault + Trusted Folder + LAN Wi‑Fi P2P (as maturity allows). On-device vault importer: first password-manager JSON path dogfood-ready; more formats planned.
 
 > Heavy active development — treat unfinished areas as directional. Deep engineering roadmaps stay private; this tree is intentionally slim.
 

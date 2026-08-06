@@ -4,11 +4,13 @@
 
 # SuchConfig
 
-**Public Alpha** (`v1.0.0-alpha.6`) — local-first Project Vault + Secrets Vault.
+**Public Alpha** (`v1.0.0-alpha.7`) — local-first Project Vault + Secrets Vault.
 
 **Your local-first source of truth for configs, secrets, and teams.**
 
-SuchConfig is the vault-and-collaboration product under the Such umbrella: project-scoped knowledge, secrets with placeholders, and credentials — offline by default, merge-friendly over time with CRDTs, with no cloud vault or sync of your note contents.
+SuchConfig is built for developers who need one trusted, local-first place for sensitive project work — passwords, configs, secrets, and the tools that support secure day-to-day engineering.
+
+It is the vault-and-collaboration product under the Such umbrella: project-scoped knowledge, secrets with placeholders, and credentials — offline by default, merge-friendly over time with CRDTs, with no cloud vault or sync of your note contents.
 
 > **Heavy active development.** This is the first public cut of the open-core CE. APIs, UX, and sync behavior will change. Expect rough edges; please read [Current status](#current-status) before depending on any path in production.
 
@@ -33,7 +35,7 @@ Open core lets you audit the vault crypto and run a free local vault with user-o
 | Project Vault + Secrets Vault (offline, CRDT) | Usable — dogfood; still evolving |
 | Trusted Folder sync | Shipped — Free |
 | LAN Wi‑Fi P2P | Pairing + Handoff verified; incremental deltas and firewall-ON hardening still open — **not** finished LAN sync |
-| On-device vault importer | Planned — Free when formats ship; **not** in this alpha |
+| On-device vault importer | First password-manager JSON path dogfood-ready (Free); more formats planned |
 | Signed / notarized macOS builds | Stated honestly on download pages when published |
 | Pricing | Hidden during Public Alpha |
 
@@ -48,7 +50,7 @@ Detail: [docs/public-alpha-roadmap.md](docs/public-alpha-roadmap.md) · [docs/op
 | Project Vault + Secrets Vault + encrypted archives | Offline CRDT-backed store |
 | **Trusted Folder** | User-owned folder backup / merge |
 | **LAN Wi‑Fi P2P** | Opt-in, same LAN; maturity above |
-| **Vault Importer** | On-device; when formats ship |
+| **Vault Importer** | On-device; first password-manager JSON path shipped; more formats planned |
 
 Never paywalled: Trusted Folder, LAN P2P, or Vault Importer (when it ships).
 

@@ -1,7 +1,7 @@
 defmodule SuchConfigCore.MixProject do
   use Mix.Project
 
-  @version "0.2.1-ce"
+  @version "0.2.3-ce"
 
   def project do
     [

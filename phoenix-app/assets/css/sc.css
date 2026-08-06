@@ -552,6 +552,12 @@
   flex-direction: column;
 }
 
+.file-detail:has(#markdown-workspace) {
+  height: calc(100vh - 120px);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
 .file-detail.empty {
   display: grid;
   place-items: center;
@@ -564,6 +570,7 @@
   gap: 14px;
   padding: 18px 18px 14px;
   border-bottom: 1px solid var(--line-soft);
+  flex-shrink: 0;
 }
 
 .file-detail-head .icon-lg {
@@ -634,6 +641,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   border-bottom: 1px solid var(--line-soft);
+  flex-shrink: 0;
 }
 
 .file-detail-meta .meta-cell {
@@ -756,6 +764,51 @@
   padding: 0;
   overflow: auto;
   flex: 1;
+  min-height: 0;
+}
+
+.file-detail-body:has(#markdown-workspace) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.file-detail-body:has(#markdown-workspace) #project-vault-note-editor {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+  padding: 0 0 12px;
+}
+
+.file-detail-body:has(#markdown-workspace) .pv-actions {
+  flex-shrink: 0;
+}
+
+.file-detail-body:has(#markdown-workspace) .note-preview-form {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.file-detail-body:has(#markdown-workspace) .note-form-body {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: hidden;
+  gap: 12px;
+}
+
+.file-detail-body:has(#markdown-workspace) #markdown-workspace {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.file-detail-body:has(#markdown-workspace) #markdown-workspace [data-md-panes] {
   min-height: 0;
 }
 
@@ -1342,6 +1395,35 @@
 .btn:hover {
   background: var(--bg-2);
   border-color: var(--line);
+}
+
+.btn:disabled,
+.btn.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn:disabled:hover,
+.btn.is-disabled:hover,
+.btn.danger:disabled:hover,
+.btn.danger.is-disabled:hover,
+.btn.primary:disabled:hover,
+.btn.primary.is-disabled:hover {
+  background: var(--bg-1);
+  border-color: var(--line-soft);
+}
+
+.btn.danger:disabled:hover,
+.btn.danger.is-disabled:hover {
+  color: var(--rust);
+}
+
+.btn.primary:disabled:hover,
+.btn.primary.is-disabled:hover {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-ink);
 }
 
 .btn.icon-only {

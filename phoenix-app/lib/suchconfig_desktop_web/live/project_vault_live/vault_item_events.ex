@@ -406,6 +406,45 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.VaultItemEvents do
     end
   end
 
+  def open_link_project_modal_for_path(path, socket, opts \\ [])
+
+  def open_link_project_modal_for_path(path, socket, opts) when is_binary(path) do
+    trimmed = String.trim(path)
+    run_sentinel? = Keyword.get(opts, :run_sentinel, false) == true
+
+    cond do
+      trimmed == "" ->
+        {:noreply, socket}
+
+      is_nil(socket.assigns.selected_folder_id) ->
+        {:noreply, assign(socket, error: "Select a project folder first.", info: nil)}
+
+      true ->
+        send(self(), {:link_project_scan_disk, trimmed})
+
+        {:noreply,
+         assign(socket,
+           show_link_project_modal: true,
+           link_project_stage: :scanning,
+           link_project_preview: nil,
+           link_project_project_data: nil,
+           link_project_scan_path: trimmed,
+           link_project_project_name: nil,
+           link_project_vault_candidates: [],
+           link_project_vault_selected: %{},
+           link_project_ai_tooling: nil,
+           link_project_scaffold_selected: %{},
+           link_project_existing_notes_strategy: nil,
+           link_project_error: nil,
+           link_project_run_sentinel: run_sentinel?,
+           error: nil,
+           info: nil
+         )}
+    end
+  end
+
+  def open_link_project_modal_for_path(_path, socket, _opts), do: {:noreply, socket}
+
   def cancel_link_project_modal(_params, socket) do
     {:noreply,
      assign(socket,

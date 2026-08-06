@@ -24,6 +24,8 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.EntryDetail do
   attr :selected_item_id, :any, default: nil
   attr :item_inserted_at, :any, default: nil
   attr :item_updated_at, :any, default: nil
+  attr :entry_activity, :list, default: []
+  attr :item_last_used_at, :any, default: nil
   attr :generator_strength, :any, default: nil
   attr :crdt_enabled?, :boolean, default: false
   attr :generator_event_target, :string, default: nil
@@ -51,6 +53,7 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.EntryDetail do
       |> assign(:glyph_type, Formatting.glyph_type(kind))
       |> assign(:created_label, Formatting.format_date(assigns.item_inserted_at))
       |> assign(:modified_label, Formatting.format_relative_time(assigns.item_updated_at))
+      |> assign(:last_used_label, Formatting.format_relative_time(assigns.item_last_used_at))
       |> assign(:entry_folder_name, entry_folder_name(assigns.folders, assigns.entry_folder_id))
 
     ~H"""
@@ -151,7 +154,7 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.EntryDetail do
             </div>
             <div class="meta-cell">
               <div class="k">Last used</div>
-              <div class="v">{@modified_label}</div>
+              <div class="v">{@last_used_label}</div>
             </div>
             <div class="meta-cell">
               <div class="k">Devices</div>
@@ -198,6 +201,10 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.EntryDetail do
                 value={@username}
                 copy_event="copy_username"
                 copy_button_id="copy-username-button"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="none"
+                spellcheck="false"
               />
             </div>
 
@@ -251,38 +258,26 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.EntryDetail do
                   local audit log · never leaves device
                 </span>
               </div>
-              <div class="audit">
-                <div class="audit-row copy">
+              <div :if={@entry_activity != []} class="audit" id="secrets-entry-activity">
+                <div
+                  :for={event <- @entry_activity}
+                  id={"secrets-activity-#{event.id}"}
+                  class={["audit-row", activity_row_class(event.action)]}
+                >
                   <span class="blip" />
-                  <span class="when">2m ago</span>
-                  <span class="what">Copied password</span>
-                  <span class="where">macbook-air · local</span>
-                </div>
-                <div class="audit-row edit">
-                  <span class="blip" />
-                  <span class="when">3h ago</span>
-                  <span class="what">Updated URL</span>
-                  <span class="where">macbook-air · local</span>
-                </div>
-                <div class="audit-row copy">
-                  <span class="blip" />
-                  <span class="when">yesterday</span>
-                  <span class="what">Copied username</span>
-                  <span class="where">studio-mini · local</span>
-                </div>
-                <div class="audit-row edit">
-                  <span class="blip" />
-                  <span class="when">{@modified_label}</span>
-                  <span class="what">Rotated password</span>
-                  <span class="where">macbook-air · local</span>
-                </div>
-                <div class="audit-row create">
-                  <span class="blip" />
-                  <span class="when">{@created_label}</span>
-                  <span class="what">Created entry</span>
-                  <span class="where">macbook-air · local</span>
+                  <span class="when">{Formatting.format_relative_time(event.inserted_at)}</span>
+                  <span class="what">{event.summary}</span>
+                  <span class="where">{event.device_label}</span>
                 </div>
               </div>
+              <p
+                :if={@entry_activity == []}
+                id="secrets-entry-activity-empty"
+                class="faint"
+                style="margin: 0; font-size: 12px"
+              >
+                No activity yet on this device.
+              </p>
             </div>
           </div>
 
@@ -326,6 +321,11 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.EntryDetail do
       if folder.id == folder_id, do: folder.name
     end)
   end
+
+  defp activity_row_class("copy"), do: "copy"
+  defp activity_row_class("update"), do: "edit"
+  defp activity_row_class("create"), do: "create"
+  defp activity_row_class(_), do: nil
 
   defp username_label("api_key"), do: "Environment"
   defp username_label(kind), do: KindFields.username_label(kind)
@@ -396,7 +396,7 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.EntryDetail do
         </span>
       </div>
       <div class={["field-row secret", !@show_secret && @masked && "masked"]}>
-        <%= if @multiline do %>
+        <%= if @multiline && (@show_secret || !@masked) do %>
           <textarea id={@id} name={@name} rows={8}>{@value}</textarea>
         <% else %>
           <input
@@ -404,6 +404,7 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.EntryDetail do
             id={@id}
             name={@name}
             value={@value}
+            autocomplete="off"
           />
         <% end %>
         <button

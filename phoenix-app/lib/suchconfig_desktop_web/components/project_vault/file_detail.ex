@@ -257,7 +257,10 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.FileDetail do
               env_var_value_copied={@env_var_value_copied}
               env_var_all_copied={@env_var_all_copied}
               new_note_form_highlight?={@new_note_form_highlight?}
-              expand_vertically?={false}
+              expand_vertically?={
+                @editor_focus == :vault_item &&
+                  Formatting.project_details_vault_item?(@note_title, @note_category)
+              }
               vault_item_ui_enabled?={@vault_item_ui_enabled?}
               selected_vault_item_id={@selected_vault_item_id}
               broker_ui_enabled?={@broker_ui_enabled?}

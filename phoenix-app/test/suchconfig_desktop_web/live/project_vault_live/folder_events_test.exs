@@ -62,7 +62,7 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEventsTest do
       end
     end
 
-    test "links project path when provided and does not require sentinel" do
+    test "opens link project modal and starts scan when path is provided" do
       Application.put_env(:suchconfig_desktop, :security_sentinel_license_enabled, true)
       path = "/tmp/suchconfig-new-project-link-#{System.unique_integer([:positive])}"
       name = "Linked Create #{System.unique_integer([:positive])}"
@@ -71,7 +71,11 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEventsTest do
         base_socket(%{
           new_folder_link_path: path,
           new_folder_link_stage: :ready,
-          new_folder_run_sentinel: false
+          new_folder_run_sentinel: false,
+          show_link_project_modal: false,
+          link_project_stage: :idle,
+          link_project_scan_path: nil,
+          link_project_run_sentinel: false
         })
 
       assert {:noreply, next} =
@@ -86,8 +90,10 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEventsTest do
 
       folder = Enum.find(next.assigns.folders, &(&1.name == name))
       assert folder
-      assert folder.linked_project_path == path
-      assert next.assigns.info =~ "linked"
+      assert is_nil(folder.linked_project_path)
+      assert next.assigns.show_link_project_modal == true
+      assert next.assigns.link_project_stage == :scanning
+      assert next.assigns.link_project_scan_path == path
       refute next.assigns[:sentinel_scanning]
     end
 
@@ -100,7 +106,11 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEventsTest do
         base_socket(%{
           new_folder_link_path: path,
           new_folder_link_stage: :ready,
-          new_folder_run_sentinel: true
+          new_folder_run_sentinel: true,
+          show_link_project_modal: false,
+          link_project_stage: :idle,
+          link_project_scan_path: nil,
+          link_project_run_sentinel: false
         })
 
       assert {:noreply, next} =
@@ -115,7 +125,9 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEventsTest do
                )
 
       folder = ProjectVault.get_project_folder!(next.assigns.selected_folder_id)
-      assert folder.linked_project_path == path
+      assert is_nil(folder.linked_project_path)
+      assert next.assigns.show_link_project_modal == true
+      assert next.assigns.link_project_run_sentinel == false
       refute next.assigns[:sentinel_scanning]
     end
 
@@ -129,7 +141,11 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEventsTest do
         base_socket(%{
           new_folder_link_path: path,
           new_folder_link_stage: :ready,
-          new_folder_run_sentinel: true
+          new_folder_run_sentinel: true,
+          show_link_project_modal: false,
+          link_project_stage: :idle,
+          link_project_scan_path: nil,
+          link_project_run_sentinel: false
         })
 
       assert {:noreply, next} =
@@ -143,11 +159,13 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEventsTest do
                  socket
                )
 
+      assert next.assigns.show_link_project_modal == true
+      assert next.assigns.link_project_run_sentinel == false
       refute next.assigns[:sentinel_scanning]
       refute next.assigns[:show_sentinel_report_modal]
     end
 
-    test "starts sentinel onboard scan for Pro when checkbox is checked" do
+    test "carries sentinel preference into link modal for Pro when checkbox is checked" do
       Application.put_env(:suchconfig_desktop, :security_sentinel_license_enabled, true)
       path = "/tmp/suchconfig-pro-sentinel-#{System.unique_integer([:positive])}"
       name = "Pro Sentinel Create #{System.unique_integer([:positive])}"
@@ -156,7 +174,11 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEventsTest do
         base_socket(%{
           new_folder_link_path: path,
           new_folder_link_stage: :ready,
-          new_folder_run_sentinel: true
+          new_folder_run_sentinel: true,
+          show_link_project_modal: false,
+          link_project_stage: :idle,
+          link_project_scan_path: nil,
+          link_project_run_sentinel: false
         })
 
       assert {:noreply, next} =
@@ -170,9 +192,25 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEventsTest do
                  socket
                )
 
-      assert next.assigns.sentinel_scanning == true
-      assert next.assigns.sentinel_pending_path == path
-      assert next.assigns.sentinel_pending_folder_id == next.assigns.selected_folder_id
+      assert next.assigns.show_link_project_modal == true
+      assert next.assigns.link_project_stage == :scanning
+      assert next.assigns.link_project_scan_path == path
+      assert next.assigns.link_project_run_sentinel == true
+      refute next.assigns[:sentinel_scanning]
+    end
+
+    test "surfaces duplicate folder name error in the new folder modal" do
+      name = "Dup Create #{System.unique_integer([:positive])}"
+      {:ok, _} = ProjectVault.create_project_folder(%{name: name})
+
+      assert {:noreply, next} =
+               FolderEvents.create(
+                 %{"folder_name" => name, "folder_description" => "", "folder_tags" => ""},
+                 base_socket(%{})
+               )
+
+      assert next.assigns.show_new_folder_modal == true
+      assert next.assigns.error =~ "already exists"
     end
   end
 end

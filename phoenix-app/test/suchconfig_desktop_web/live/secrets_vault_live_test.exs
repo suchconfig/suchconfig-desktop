@@ -87,12 +87,99 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLiveTest do
         assert has_element?(view, "#copy-secret-button[data-copy-event=copy_secret]")
         assert has_element?(view, "#copy-secret-button[data-copy-text=placeholder]")
         assert has_element?(view, "#copy-username-button[data-copy-text=\"seed@example.com\"]")
+        assert has_element?(view, "#secret-body-input[type=password]")
+        assert has_element?(view, "#toggle-reveal-button")
+        assert has_element?(view, "#secrets-entry-activity")
+        assert render(view) =~ "Created entry"
         refute has_element?(view, "#secrets-vault-stats")
+
+        view |> element("#toggle-reveal-button") |> render_click()
+        assert has_element?(view, "#secret-body-input[type=text]")
+
+        view |> element("#toggle-reveal-button") |> render_click()
+        assert has_element?(view, "#secret-body-input[type=password]")
+
+        render_click(view, "copy_secret", %{})
+        html = render(view)
+        assert html =~ "Copied password"
+        assert html =~ "Copied to clipboard."
 
         view |> element("#secrets-page-stats-button") |> render_click()
 
         assert has_element?(view, "#secrets-vault-stats")
         refute has_element?(view, "#secrets-entry-detail")
+      end
+    end
+
+    @tag :crdt_nif_required
+    test "activity updates after saving field changes", %{conn: conn} do
+      {:ok, folder} = SecretsVault.ensure_unassociated_folder()
+
+      {:ok, item} =
+        SecretsVault.save_item(
+          %{
+            title: "Activity login",
+            kind: "password",
+            secrets_vault_folder_id: folder.id,
+            body: "initial-secret",
+            frontmatter: %{"url" => "https://old.example"}
+          },
+          @password
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/secrets-vault", @live_opts)
+
+      view
+      |> element("#secrets-entry-#{item.id}")
+      |> render_click()
+
+      view
+      |> form("#secrets-entry-form", %{
+        title: "Activity login",
+        kind: "password",
+        secrets_vault_folder_id: Integer.to_string(folder.id),
+        url: "https://new.example",
+        username: "",
+        secret_body: "initial-secret"
+      })
+      |> render_submit()
+
+      assert render(view) =~ "Updated URL"
+      assert render(view) =~ "Created entry"
+    end
+
+    test "masks SSH private key until reveal is toggled", %{conn: conn} do
+      {:ok, folder} = SecretsVault.ensure_unassociated_folder()
+
+      if Crdt.available?() do
+        private_key =
+          "-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n-----END OPENSSH PRIVATE KEY-----"
+
+        {:ok, item} =
+          SecretsVault.save_item(
+            %{
+              title: "Seeded SSH",
+              kind: "ssh_key",
+              secrets_vault_folder_id: folder.id,
+              body: private_key,
+              frontmatter: %{}
+            },
+            @password
+          )
+
+        {:ok, view, _html} = live(conn, ~p"/secrets-vault", @live_opts)
+
+        view
+        |> element("#secrets-entry-#{item.id}")
+        |> render_click()
+
+        assert has_element?(view, "#secret-body-input[type=password]")
+        refute has_element?(view, "textarea#secret-body-input")
+
+        view |> element("#toggle-reveal-button") |> render_click()
+
+        assert has_element?(view, "textarea#secret-body-input")
+        assert render(view) =~ "BEGIN OPENSSH PRIVATE KEY"
       end
     end
 
@@ -115,23 +202,101 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLiveTest do
       assert Enum.any?(SecretsVault.list_folders(), &(&1.name == unique))
     end
 
-    test "deletes a folder from the edit modal", %{conn: conn} do
+    test "shows folder settings when a folder is selected", %{conn: conn} do
+      unique = "Settings #{System.unique_integer([:positive])}"
+      {:ok, folder} = SecretsVault.create_folder(%{name: unique})
+
+      {:ok, view, _html} = live(conn, ~p"/secrets-vault", @live_opts)
+
+      assert has_element?(view, "#secrets-folder-settings-button")
+      assert has_element?(view, "#secrets-folder-rename[disabled]")
+      assert has_element?(view, "#secrets-folder-delete[disabled]")
+
+      view
+      |> form("#secrets-folder-toolbar-form", %{"folder_id" => "#{folder.id}"})
+      |> render_change()
+
+      assert has_element?(view, "#secrets-folder-settings-button")
+      refute has_element?(view, "#secrets-folder-rename[disabled]")
+      refute has_element?(view, "#secrets-folder-delete[disabled]")
+
+      view
+      |> form("#secrets-folder-toolbar-form", %{"folder_id" => "all"})
+      |> render_change()
+
+      refute has_element?(view, "#secrets-folder-settings-button")
+    end
+
+    test "renames a folder from the settings modal", %{conn: conn} do
+      unique = "Rename me #{System.unique_integer([:positive])}"
+      renamed = "Renamed #{System.unique_integer([:positive])}"
+      {:ok, folder} = SecretsVault.create_folder(%{name: unique})
+
+      {:ok, view, _html} = live(conn, ~p"/secrets-vault", @live_opts)
+
+      view
+      |> form("#secrets-folder-toolbar-form", %{"folder_id" => "#{folder.id}"})
+      |> render_change()
+
+      render_click(view, "open_rename_folder", %{"id" => "#{folder.id}"})
+
+      assert has_element?(view, "#edit-secrets-folder-modal")
+      assert render(view) =~ "Rename folder"
+
+      view
+      |> form("#edit-secrets-folder-form", %{
+        "folder" => %{"name" => renamed, "description" => ""}
+      })
+      |> render_submit()
+
+      refute has_element?(view, "#edit-secrets-folder-modal")
+      assert render(view) =~ "Folder updated."
+      assert Enum.any?(SecretsVault.list_folders(), &(&1.id == folder.id and &1.name == renamed))
+    end
+
+    test "deletes a folder and moves items to Deleted Items", %{conn: conn} do
       unique = "Delete me #{System.unique_integer([:positive])}"
       {:ok, folder} = SecretsVault.create_folder(%{name: unique})
 
       {:ok, view, _html} = live(conn, ~p"/secrets-vault", @live_opts)
 
-      render_click(view, "open_edit_folder", %{"id" => "#{folder.id}"})
+      view
+      |> form("#secrets-folder-toolbar-form", %{"folder_id" => "#{folder.id}"})
+      |> render_change()
 
-      assert has_element?(view, "#edit-secrets-folder-modal")
-      assert has_element?(view, "#edit-secrets-folder-delete")
+      render_click(view, "open_delete_folder_modal", %{"id" => "#{folder.id}"})
 
-      view |> element("#edit-secrets-folder-delete") |> render_click()
-      assert has_element?(view, "#edit-secrets-folder-delete-confirm")
+      assert has_element?(view, "#delete-secrets-folder-modal")
+      assert has_element?(view, "#delete-folder-move-items")
+      assert has_element?(view, "#delete-folder-permanent-items")
+      assert has_element?(view, "#delete-secrets-folder-confirm[phx-disable-with]")
+      assert render(view) =~ "Confirm delete"
 
-      view |> element("#edit-secrets-folder-delete-confirm") |> render_click()
+      html = view |> element("#delete-secrets-folder-confirm") |> render_click()
+      assert html =~ "Deleting folder"
+      assert html =~ ~s(id="delete-secrets-folder-confirm")
+      assert html =~ "disabled"
 
-      refute has_element?(view, "#edit-secrets-folder-modal")
+      refute has_element?(view, "#delete-secrets-folder-modal")
+      assert render(view) =~ "Folder deleted."
+      refute Enum.any?(SecretsVault.list_folders(), &(&1.id == folder.id))
+      assert Enum.any?(SecretsVault.list_folders(), &(&1.name == "Deleted Items"))
+    end
+
+    test "deletes a folder and permanently deletes items", %{conn: conn} do
+      unique = "Purge me #{System.unique_integer([:positive])}"
+      {:ok, folder} = SecretsVault.create_folder(%{name: unique})
+
+      {:ok, view, _html} = live(conn, ~p"/secrets-vault", @live_opts)
+
+      render_click(view, "open_delete_folder_modal", %{"id" => "#{folder.id}"})
+      render_click(view, "set_delete_folder_items_action", %{"action" => "permanent_delete"})
+
+      assert has_element?(view, "#delete-folder-permanent-items[checked]")
+
+      view |> element("#delete-secrets-folder-confirm") |> render_click()
+
+      refute has_element?(view, "#delete-secrets-folder-modal")
       assert render(view) =~ "Folder deleted."
       refute Enum.any?(SecretsVault.list_folders(), &(&1.id == folder.id))
     end
@@ -404,6 +569,102 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLiveTest do
       assert has_element?(view, "#new-entry-token-input")
       assert has_element?(view, "#new-entry-environment-input")
       refute has_element?(view, "#new-entry-fingerprint-input")
+    end
+
+    @tag crdt_nif_required: true
+    test "manager import wizard previews and imports Bitwarden JSON", %{conn: conn} do
+      fixture =
+        Path.expand(
+          "../../../../../suchconfig-core/test/fixtures/importers/bitwarden_sample.json",
+          __DIR__
+        )
+
+      {:ok, view, _html} = live(conn, ~p"/secrets-vault", @live_opts)
+
+      assert has_element?(view, "#secrets-manager-import-button")
+      view |> element("#secrets-manager-import-button") |> render_click()
+      assert has_element?(view, "#secrets-manager-import-modal")
+      assert has_element?(view, "#manager-import-source-bitwarden")
+
+      view |> element("#manager-import-source-bitwarden") |> render_click()
+      assert has_element?(view, "#manager-import-preview-button")
+
+      json = File.read!(fixture)
+
+      view
+      |> file_input("#secrets-manager-import-modal", :manager_import_file, [
+        %{
+          name: "bitwarden_sample.json",
+          content: json,
+          type: "application/json"
+        }
+      ])
+      |> render_upload("bitwarden_sample.json")
+
+      view |> element("#manager-import-preview-button") |> render_click()
+      assert has_element?(view, "#manager-import-confirm-button")
+      html = render(view)
+      assert html =~ "GitHub"
+      assert html =~ "Import all"
+      refute has_element?(view, "#manager-import-duplicates")
+
+      view |> element("#manager-import-confirm-button") |> render_click()
+      assert has_element?(view, "#manager-import-done-button")
+      assert Enum.any?(SecretsVault.list_folders(), &(&1.name == "Work"))
+    end
+
+    @tag crdt_nif_required: true
+    test "manager import shows duplicate strategy choices on second import", %{conn: conn} do
+      fixture =
+        Path.expand(
+          "../../../../../suchconfig-core/test/fixtures/importers/bitwarden_sample.json",
+          __DIR__
+        )
+
+      json = File.read!(fixture)
+
+      assert {:ok, preview} =
+               SuchConfigDesktop.SecretsVault.ManagerImport.preview_bitwarden_export(json)
+
+      assert {:ok, _} =
+               SuchConfigDesktop.SecretsVault.ManagerImport.import_normalized(
+                 preview.import_data,
+                 :all,
+                 @password
+               )
+
+      {:ok, view, _html} = live(conn, ~p"/secrets-vault", @live_opts)
+
+      view |> element("#secrets-manager-import-button") |> render_click()
+      view |> element("#manager-import-source-bitwarden") |> render_click()
+
+      view
+      |> file_input("#secrets-manager-import-modal", :manager_import_file, [
+        %{
+          name: "bitwarden_sample.json",
+          content: json,
+          type: "application/json"
+        }
+      ])
+      |> render_upload("bitwarden_sample.json")
+
+      view |> element("#manager-import-preview-button") |> render_click()
+
+      assert has_element?(view, "#manager-import-duplicates")
+      assert has_element?(view, "#manager-import-strategy-keep")
+      assert has_element?(view, "#manager-import-strategy-overwrite")
+      html = render(view)
+      assert html =~ "Keep as new"
+      assert html =~ "Overwrite duplicates"
+
+      view
+      |> element("#manager-import-strategy-overwrite")
+      |> render_click()
+
+      view |> element("#manager-import-confirm-button") |> render_click()
+      assert has_element?(view, "#manager-import-done-button")
+      done = render(view)
+      assert done =~ "overwritten"
     end
   end
 end

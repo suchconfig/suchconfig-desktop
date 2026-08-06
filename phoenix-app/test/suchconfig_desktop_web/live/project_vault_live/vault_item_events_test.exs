@@ -135,6 +135,33 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.VaultItemEventsTest do
     end
   end
 
+  describe "open_link_project_modal_for_path/3" do
+    test "requires selected folder" do
+      {:noreply, socket} =
+        VaultItemEvents.open_link_project_modal_for_path("/tmp/project", base_socket())
+
+      assert socket.assigns.error =~ "Select a project folder"
+      refute socket.assigns.show_link_project_modal
+    end
+
+    test "opens modal in scanning stage with path and sentinel preference" do
+      folder = project_folder_fixture()
+      path = "/tmp/suchconfig-link-for-path-#{System.unique_integer([:positive])}"
+
+      {:noreply, socket} =
+        VaultItemEvents.open_link_project_modal_for_path(
+          path,
+          base_socket(%{selected_folder_id: folder.id}),
+          run_sentinel: true
+        )
+
+      assert socket.assigns.show_link_project_modal
+      assert socket.assigns.link_project_stage == :scanning
+      assert socket.assigns.link_project_scan_path == path
+      assert socket.assigns.link_project_run_sentinel == true
+    end
+  end
+
   describe "link_project_existing_notes_change/2" do
     test "stores overwrite or duplicate strategy" do
       {:noreply, socket} =

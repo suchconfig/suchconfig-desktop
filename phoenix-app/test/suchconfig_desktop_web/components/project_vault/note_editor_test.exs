@@ -145,6 +145,10 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.NoteEditorTest do
       assert html =~ ~s(data-md-preview-wrap)
       assert html =~ ~s(data-md-preview)
       assert html =~ ~s(phx-update="ignore")
+      assert html =~ "resize-none"
+      assert html =~ "overflow-auto"
+      assert html =~ "overflow-hidden"
+      assert html =~ "note-form-body"
       assert html =~ ~s(name="note_raw_content")
       assert html =~ ~s(type="hidden")
       assert html =~ ~s(name="note_category")

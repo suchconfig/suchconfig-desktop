@@ -26,7 +26,7 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.NewEntry do
     modal_type = Formatting.modal_type_id(assigns.item_kind)
 
     picker_folders =
-      Enum.reject(assigns.folders, &(&1.name == Folder.unassociated_name()))
+      Enum.reject(assigns.folders, &Folder.system_folder?/1)
 
     assigns =
       assigns
@@ -74,6 +74,8 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.NewEntry do
             placeholder={@title_placeholder}
             autocomplete="off"
             autocapitalize="none"
+            spellcheck="false"
+            autocorrect="off"
           />
 
           <div :if={@modal_type == "login"} class="entry-type-panel" data-entry-type="login">
@@ -142,6 +144,10 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.NewEntry do
               label="Website URL"
               value={@url}
               placeholder="https://"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="none"
+              spellcheck="false"
             />
           </div>
 

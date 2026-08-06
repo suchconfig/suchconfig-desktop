@@ -14,10 +14,20 @@ defmodule SuchConfigDesktop.SecretsVault.Folder do
   end
 
   @unassociated_name "Unassociated"
+  @deleted_items_name "Deleted Items"
 
   def unassociated_name, do: @unassociated_name
 
+  def deleted_items_name, do: @deleted_items_name
+
   def uncategorized_name, do: unassociated_name()
+
+  def system_folder_names, do: [@unassociated_name, @deleted_items_name]
+
+  def system_folder?(%__MODULE__{name: name}) when is_binary(name),
+    do: name in system_folder_names()
+
+  def system_folder?(_), do: false
 
   def changeset(folder, attrs) do
     folder

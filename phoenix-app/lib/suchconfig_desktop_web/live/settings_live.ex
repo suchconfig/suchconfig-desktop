@@ -2,13 +2,22 @@ defmodule SuchConfigDesktopWeb.SettingsLive do
   use SuchConfigDesktopWeb, :live_view
 
   @shortcuts [
-    {"Open command palette", "⌘K"},
-    {"Open Settings", "G ,"},
+    {"Open command palette", "⌘K / Ctrl+K"},
     {"Lock vault", "⌃⇧L"},
-    {"New login", "N L"},
-    {"New API key", "N A"},
-    {"Copy username", "⌘⇧C"},
-    {"Reveal secret", "⌘R"}
+    {"Dismiss overlay", "⎋"},
+    {"Open Dashboard", "G then D"},
+    {"Open Projects", "G then W"},
+    {"Open Project Vault", "G then P"},
+    {"Open Secrets Vault", "G then S"},
+    {"Toggle Password Generator", "G then G"},
+    {"Open Settings", "G then ,"},
+    {"Export sealed archive", "G then E"},
+    {"Import sealed archive", "G then I"},
+    {"New login entry", "N then L"},
+    {"New API key", "N then A"},
+    {"New SSH key", "N then S"},
+    {"New secure note", "N then N"},
+    {"New project", "N then P"}
   ]
 
   alias SuchConfigDesktop.TrustedFolder
@@ -356,21 +365,18 @@ defmodule SuchConfigDesktopWeb.SettingsLive do
                 Unlock
               </button>
             </div>
-            <div class="row" style="justify-content: space-between">
-              <span>Master passphrase</span>
-              <button type="button" class="btn sm">Rotate</button>
-            </div>
+            <%!-- Master passphrase Rotate — hidden until Phase 2 ships; see docs/ROADMAP.md --%>
             <div class="row" style="justify-content: space-between">
               <span>Auto-lock after</span>
               <span class="mono faint">10 minutes</span>
             </div>
             <div class="row" style="justify-content: space-between">
               <span>Algorithm</span>
-              <span class="mono faint">XChaCha20-Poly1305</span>
+              <span class="mono faint">AES-256-GCM</span>
             </div>
             <div class="row" style="justify-content: space-between">
               <span>KDF</span>
-              <span class="mono faint">Argon2id · t=4 · m=64M</span>
+              <span class="mono faint">PBKDF2-SHA256 · 210k</span>
             </div>
           </div>
         </div>

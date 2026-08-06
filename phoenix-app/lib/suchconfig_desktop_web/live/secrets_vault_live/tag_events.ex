@@ -20,10 +20,9 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.TagEvents do
     "Security"
   ]
 
-  def tag_suggestions(items, password, extra_tags \\ []) when is_list(items) do
+  def tag_suggestions(tags_by_item_id, extra_tags \\ []) when is_map(tags_by_item_id) do
     base =
-      items
-      |> Formatting.tags_by_item_id(password)
+      tags_by_item_id
       |> Map.values()
       |> List.flatten()
 

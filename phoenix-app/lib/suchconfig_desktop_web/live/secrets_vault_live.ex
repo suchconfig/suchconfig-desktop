@@ -19,6 +19,7 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
     FolderEvents,
     Formatting,
     Generator,
+    ManagerImportEvents,
     Passkey,
     TagEvents,
     ViewData
@@ -62,6 +63,8 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
           item_title: "",
           item_inserted_at: nil,
           item_updated_at: nil,
+          entry_activity: [],
+          item_last_used_at: nil,
           item_kind: "password",
           username: "",
           url: "",
@@ -83,10 +86,13 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
           folder_name: "",
           folder_description: "",
           show_edit_folder_modal: false,
+          show_delete_folder_modal: false,
           editing_folder_id: nil,
           edit_folder_name: "",
           edit_folder_description: "",
-          edit_folder_delete_confirm: false,
+          delete_folder_name: "",
+          delete_folder_items_action: :move_to_deleted_items,
+          delete_folder_busy: false,
           show_delete_modal: false,
           show_new_entry_modal: false,
           new_entry_tags: "",
@@ -95,7 +101,18 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
           item_tags: [],
           generator_strength: nil,
           info: nil,
-          error: nil
+          error: nil,
+          manager_import_open: false,
+          manager_import_stage: :idle,
+          manager_import_preview: nil,
+          manager_import_result: nil,
+          manager_import_duplicate_strategy: :keep_as_new
+        )
+        |> allow_upload(:manager_import_file,
+          accept: ~w(.json application/json text/plain application/octet-stream),
+          max_entries: 1,
+          max_file_size: 50_000_000,
+          auto_upload: true
         )
         |> then(fn socket ->
           if embedded, do: socket, else: assign(socket, Generator.default_assigns())
@@ -152,14 +169,20 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
   def handle_event("open_edit_folder", params, socket),
     do: FolderEvents.open_edit_folder(params, socket)
 
+  def handle_event("open_rename_folder", params, socket),
+    do: FolderEvents.open_rename_folder(params, socket)
+
   def handle_event("close_edit_folder_modal", params, socket),
     do: FolderEvents.close_edit_folder_modal(params, socket)
 
-  def handle_event("request_delete_folder", params, socket),
-    do: FolderEvents.request_delete_folder(params, socket)
+  def handle_event("open_delete_folder_modal", params, socket),
+    do: FolderEvents.open_delete_folder_modal(params, socket)
 
-  def handle_event("cancel_delete_folder_confirm", params, socket),
-    do: FolderEvents.cancel_delete_folder_confirm(params, socket)
+  def handle_event("close_delete_folder_modal", params, socket),
+    do: FolderEvents.close_delete_folder_modal(params, socket)
+
+  def handle_event("set_delete_folder_items_action", params, socket),
+    do: FolderEvents.set_delete_folder_items_action(params, socket)
 
   def handle_event("delete_folder", params, socket),
     do: FolderEvents.delete_folder(params, socket)
@@ -261,6 +284,30 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
   def handle_event("remove_item_tag", params, socket),
     do: TagEvents.remove_item_tag(params, socket)
 
+  def handle_event("open_manager_import", params, socket),
+    do: ManagerImportEvents.open_wizard(params, socket)
+
+  def handle_event("close_manager_import", params, socket),
+    do: ManagerImportEvents.close_wizard(params, socket)
+
+  def handle_event("manager_import_choose_source", params, socket),
+    do: ManagerImportEvents.choose_source(params, socket)
+
+  def handle_event("manager_import_back_source", params, socket),
+    do: ManagerImportEvents.back_to_source(params, socket)
+
+  def handle_event("manager_import_prepare_preview", params, socket),
+    do: ManagerImportEvents.prepare_preview(params, socket)
+
+  def handle_event("manager_import_set_duplicate_strategy", params, socket),
+    do: ManagerImportEvents.set_duplicate_strategy(params, socket)
+
+  def handle_event("manager_import_validate", params, socket),
+    do: ManagerImportEvents.validate_upload(params, socket)
+
+  def handle_event("manager_import_confirm", params, socket),
+    do: ManagerImportEvents.confirm_import(params, socket)
+
   @impl true
   def handle_info({:generator_open, _context}, socket), do: {:noreply, socket}
   def handle_info(:generator_open, socket), do: {:noreply, socket}
@@ -312,6 +359,10 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
     {:noreply, ViewData.assign_view_data(socket, load_all_items: true)}
   end
 
+  def handle_info(:perform_delete_folder, socket) do
+    FolderEvents.perform_delete_folder(socket)
+  end
+
   def handle_info({:open_new_entry, type}, socket) when is_binary(type) do
     EntryEvents.new_item_of_type(type, socket)
   end
@@ -345,6 +396,8 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
   attr :item_title, :string, default: ""
   attr :item_inserted_at, :any, default: nil
   attr :item_updated_at, :any, default: nil
+  attr :entry_activity, :list, default: []
+  attr :item_last_used_at, :any, default: nil
   attr :item_kind, :string, default: "password"
   attr :username, :string, default: ""
   attr :url, :string, default: ""
@@ -363,9 +416,12 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
   attr :native_passkey_provider, :string, default: "unknown"
   attr :show_new_folder_modal, :boolean, default: false
   attr :show_edit_folder_modal, :boolean, default: false
+  attr :show_delete_folder_modal, :boolean, default: false
   attr :edit_folder_name, :string, default: ""
   attr :edit_folder_description, :string, default: ""
-  attr :edit_folder_delete_confirm, :boolean, default: false
+  attr :delete_folder_name, :string, default: ""
+  attr :delete_folder_items_action, :atom, default: :move_to_deleted_items
+  attr :delete_folder_busy, :boolean, default: false
   attr :show_delete_modal, :boolean, default: false
   attr :show_new_entry_modal, :boolean, default: false
   attr :new_entry_tags, :string, default: ""
@@ -382,6 +438,12 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
   attr :generator_recent, :list, default: []
   attr :generator_context, :atom, default: :standalone
   attr :generator_copied, :boolean, default: false
+  attr :manager_import_open, :boolean, default: false
+  attr :manager_import_stage, :atom, default: :idle
+  attr :manager_import_preview, :any, default: nil
+  attr :manager_import_result, :any, default: nil
+  attr :manager_import_duplicate_strategy, :atom, default: :keep_as_new
+  attr :uploads, :any, default: nil
 
   defp secrets_vault_content(assigns) do
     ~H"""
@@ -424,6 +486,14 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
               id="new-secret-button"
             >
               <.sc_icon name="plus" size={13} /> New entry
+            </button>
+            <button
+              type="button"
+              phx-click="open_manager_import"
+              id="secrets-manager-import-button"
+              class="btn sm"
+            >
+              <.sc_icon name="archive" size={13} /> Import
             </button>
             <button
               type="button"
@@ -554,6 +624,8 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
                 entry_folder_id={@entry_folder_id}
                 item_inserted_at={@item_inserted_at}
                 item_updated_at={@item_updated_at}
+                entry_activity={@entry_activity}
+                item_last_used_at={@item_last_used_at}
                 generator_strength={@generator_strength}
                 crdt_enabled?={@crdt_enabled?}
                 generator_event_target={@generator_event_target}
@@ -595,9 +667,23 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive do
           show={@show_edit_folder_modal}
           edit_folder_name={@edit_folder_name}
           edit_folder_description={@edit_folder_description}
-          edit_folder_delete_confirm={@edit_folder_delete_confirm}
+        />
+        <Modals.delete_folder_modal
+          show={@show_delete_folder_modal}
+          delete_folder_name={@delete_folder_name}
+          delete_folder_items_action={@delete_folder_items_action}
+          delete_folder_busy={@delete_folder_busy}
         />
         <Modals.delete_modal show={@show_delete_modal} />
+        <Modals.manager_import_modal
+          show={@manager_import_open}
+          stage={@manager_import_stage}
+          preview={@manager_import_preview}
+          result={@manager_import_result}
+          duplicate_strategy={@manager_import_duplicate_strategy}
+          error={@error}
+          uploads={@uploads}
+        />
         <.generator_drawer
           :if={!@embedded}
           open={@show_generator_drawer}

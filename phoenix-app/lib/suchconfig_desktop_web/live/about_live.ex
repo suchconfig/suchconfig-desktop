@@ -35,7 +35,7 @@ defmodule SuchConfigDesktopWeb.AboutLive do
       <div class="about-vision-intro">
         <div class="eyebrow">Our vision</div>
         <p class="about-prose">
-          SuchConfig exists so engineers can stop juggling Bitwarden, scattered
+          SuchConfig exists so engineers can stop juggling passwords, API keys, SSH material, scattered
           <span class="mono">.env</span>
           files, and ad hoc notes — one trusted app built for how you actually work.
         </p>
@@ -74,10 +74,22 @@ defmodule SuchConfigDesktopWeb.AboutLive do
         <div class="card">
           <h4>Credits</h4>
           <div class="col" style="font-size: 13px; gap: 8px">
-            <div>Built by zanuka.io and contributors</div>
+            <div>Created by Michael Delucchi of Zanuka Labs</div>
+            <div>
+              Community Edition (CE) is open source —
+              <a
+                href="https://github.com/suchconfig/suchconfig-app"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="docs-inline-link"
+              >
+                github.com/suchconfig/suchconfig-app
+              </a>
+            </div>
+            <div class="muted">Stack: Tauri 2 · Elixir · Phoenix LiveView · Rust</div>
+            <div class="muted">Data: SQLite · Loro CRDT</div>
+            <div class="muted">Crypto: AES-256-GCM, Argon2id, Ed25519</div>
             <div class="muted">Type: Instrument Serif · Geist · Geist Mono</div>
-            <div class="muted">Crypto: XChaCha20-Poly1305, Argon2id, Ed25519</div>
-            <div class="muted">CRDTs: Loro-backed merge</div>
           </div>
         </div>
         <div class="card">

@@ -100,18 +100,24 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.FolderEvents do
     end
   end
 
+  def open_rename_folder(params, socket), do: open_edit_folder(params, socket)
+
   def open_edit_folder(%{"id" => id}, socket) do
     folder = SecretsVault.get_folder!(parse_id(id))
 
-    {:noreply,
-     assign(socket,
-       show_edit_folder_modal: true,
-       editing_folder_id: folder.id,
-       edit_folder_name: folder.name,
-       edit_folder_description: folder.description || "",
-       edit_folder_delete_confirm: false,
-       error: nil
-     )}
+    if Folder.system_folder?(folder) do
+      {:noreply, assign(socket, error: "System folders cannot be renamed.")}
+    else
+      {:noreply,
+       assign(socket,
+         show_edit_folder_modal: true,
+         show_delete_folder_modal: false,
+         editing_folder_id: folder.id,
+         edit_folder_name: folder.name,
+         edit_folder_description: folder.description || "",
+         error: nil
+       )}
+    end
   end
 
   def close_edit_folder_modal(_params, socket) do
@@ -120,38 +126,93 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.FolderEvents do
        show_edit_folder_modal: false,
        editing_folder_id: nil,
        edit_folder_name: "",
-       edit_folder_description: "",
-       edit_folder_delete_confirm: false
+       edit_folder_description: ""
      )}
   end
 
-  def request_delete_folder(_params, socket) do
-    if socket.assigns.editing_folder_id do
-      {:noreply, assign(socket, edit_folder_delete_confirm: true, error: nil)}
+  def open_delete_folder_modal(%{"id" => id}, socket) do
+    folder = SecretsVault.get_folder!(parse_id(id))
+
+    if Folder.system_folder?(folder) do
+      {:noreply, assign(socket, error: "System folders cannot be deleted.")}
     else
-      {:noreply, socket}
+      {:noreply,
+       assign(socket,
+         show_delete_folder_modal: true,
+         show_edit_folder_modal: false,
+         editing_folder_id: folder.id,
+         delete_folder_name: folder.name,
+         delete_folder_items_action: :move_to_deleted_items,
+         delete_folder_busy: false,
+         error: nil
+       )}
     end
   end
 
-  def cancel_delete_folder_confirm(_params, socket) do
-    {:noreply, assign(socket, edit_folder_delete_confirm: false)}
+  def close_delete_folder_modal(_params, socket) do
+    if socket.assigns[:delete_folder_busy] do
+      {:noreply, socket}
+    else
+      {:noreply,
+       assign(socket,
+         show_delete_folder_modal: false,
+         editing_folder_id: nil,
+         delete_folder_name: "",
+         delete_folder_items_action: :move_to_deleted_items,
+         delete_folder_busy: false
+       )}
+    end
+  end
+
+  def set_delete_folder_items_action(%{"action" => action}, socket) do
+    if socket.assigns[:delete_folder_busy] do
+      {:noreply, socket}
+    else
+      disposition =
+        case action do
+          "permanent_delete" -> :permanent_delete
+          _ -> :move_to_deleted_items
+        end
+
+      {:noreply, assign(socket, delete_folder_items_action: disposition)}
+    end
   end
 
   def delete_folder(_params, socket) do
+    cond do
+      socket.assigns[:delete_folder_busy] ->
+        {:noreply, socket}
+
+      is_nil(socket.assigns.editing_folder_id) ->
+        {:noreply, assign(socket, error: "No folder selected.")}
+
+      true ->
+        send(self(), :perform_delete_folder)
+        {:noreply, assign(socket, delete_folder_busy: true, error: nil)}
+    end
+  end
+
+  def perform_delete_folder(socket) do
     folder_id = socket.assigns.editing_folder_id
 
     cond do
       is_nil(folder_id) ->
-        {:noreply, assign(socket, error: "No folder selected.")}
+        {:noreply,
+         assign(socket,
+           delete_folder_busy: false,
+           show_delete_folder_modal: false,
+           error: "No folder selected."
+         )}
 
       true ->
         folder = SecretsVault.get_folder!(folder_id)
 
-        if folder.name == Folder.unassociated_name() do
+        if Folder.system_folder?(folder) do
           {:noreply,
            assign(socket,
-             error: "The Unassociated folder cannot be deleted.",
-             edit_folder_delete_confirm: false
+             error: "System folders cannot be deleted.",
+             show_delete_folder_modal: false,
+             delete_folder_busy: false
            )}
         else
           delete_folder_and_refresh(socket, folder)
@@ -162,34 +223,39 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.FolderEvents do
   def update_folder(%{"folder" => params}, socket) do
     folder = SecretsVault.get_folder!(socket.assigns.editing_folder_id)
 
-    case SecretsVault.update_folder(folder, %{
-           name: Map.get(params, "name", folder.name),
-           description: Map.get(params, "description")
-         }) do
-      {:ok, _} ->
-        folders = SecretsVault.list_folders()
+    if Folder.system_folder?(folder) do
+      {:noreply, assign(socket, error: "System folders cannot be renamed.")}
+    else
+      case SecretsVault.update_folder(folder, %{
+             name: Map.get(params, "name", folder.name),
+             description: Map.get(params, "description")
+           }) do
+        {:ok, _} ->
+          folders = SecretsVault.list_folders()
 
-        {:noreply,
-         socket
-         |> assign(
-           folders: folders,
-           show_edit_folder_modal: false,
-           editing_folder_id: nil,
-           edit_folder_name: "",
-           edit_folder_description: "",
-           edit_folder_delete_confirm: false,
-           info: "Folder updated.",
-           error: nil
-         )
-         |> ViewData.assign_view_data(refresh_all_items: true)}
+          {:noreply,
+           socket
+           |> assign(
+             folders: folders,
+             show_edit_folder_modal: false,
+             editing_folder_id: nil,
+             edit_folder_name: "",
+             edit_folder_description: "",
+             info: "Folder updated.",
+             error: nil
+           )
+           |> ViewData.assign_view_data(refresh_all_items: true)}
 
-      {:error, changeset} ->
-        {:noreply, assign(socket, error: folder_error(changeset))}
+        {:error, changeset} ->
+          {:noreply, assign(socket, error: folder_error(changeset))}
+      end
     end
   end
 
   defp delete_folder_and_refresh(socket, folder) do
-    case SecretsVault.delete_folder(folder) do
+    items_action = socket.assigns[:delete_folder_items_action] || :move_to_deleted_items
+
+    case SecretsVault.delete_folder(folder, items_action: items_action) do
       {:ok, _} ->
         folders = SecretsVault.list_folders()
         was_selected = socket.assigns.selected_folder_id == folder.id
@@ -223,20 +289,32 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.FolderEvents do
            secret_body: if(was_selected, do: "", else: socket.assigns.secret_body),
            show_secret: false,
            show_edit_folder_modal: false,
+           show_delete_folder_modal: false,
            editing_folder_id: nil,
            edit_folder_name: "",
            edit_folder_description: "",
-           edit_folder_delete_confirm: false,
+           delete_folder_name: "",
+           delete_folder_items_action: :move_to_deleted_items,
+           delete_folder_busy: false,
            info: "Folder deleted.",
            error: nil
          )
          |> ViewData.assign_view_data(refresh_all_items: true)}
 
+      {:error, :system_folder} ->
+        {:noreply,
+         assign(socket,
+           error: "System folders cannot be deleted.",
+           show_delete_folder_modal: false,
+           delete_folder_busy: false
+         )}
+
       {:error, changeset} ->
         {:noreply,
          assign(socket,
            error: folder_error(changeset),
-           edit_folder_delete_confirm: false
+           show_delete_folder_modal: false,
+           delete_folder_busy: false
          )}
     end
   end
@@ -263,9 +341,13 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.FolderEvents do
   defp parse_id(id) when is_integer(id), do: id
   defp parse_id(_), do: nil
 
-  defp folder_error(changeset) do
+  defp folder_error(%Ecto.Changeset{} = changeset) do
     Ecto.Changeset.traverse_errors(changeset, fn {msg, _} -> msg end)
     |> Enum.map(fn {k, v} -> "#{k} #{List.first(v)}" end)
     |> Enum.join(", ")
   end
+
+  defp folder_error(reason) when is_atom(reason), do: SecretsVault.format_error(reason)
+  defp folder_error(reason) when is_binary(reason), do: reason
+  defp folder_error(_), do: "Operation failed."
 end

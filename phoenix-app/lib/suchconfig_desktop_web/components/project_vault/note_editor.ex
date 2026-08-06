@@ -210,6 +210,7 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.NoteEditor do
       phx-debounce="150"
       class={[
         "note-preview note-preview-form",
+        (@expand_vertically? || @markdown_workspace?) && "min-h-0 flex-1",
         @new_note_form_highlight? && "ring-2 ring-[var(--accent)]"
       ]}
     >
@@ -251,12 +252,15 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.NoteEditor do
       </div>
       <%= if !Formatting.env_display_mode?(@note_category, @item_tags) || @display_mode == :input do %>
         <div class={
-          if(@expand_vertically?, do: "flex min-h-0 flex-1 flex-col gap-3", else: "space-y-3")
+          if(@expand_vertically? || @markdown_workspace?,
+            do: "note-form-body min-h-0",
+            else: "space-y-3"
+          )
         }>
           <div
             :if={@note_category == "security_manifest"}
             id="security-manifest-editor-hint"
-            class="rounded-md border border-amber-200 bg-amber-50/80 px-3 py-2.5 text-xs text-amber-950 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-100"
+            class="shrink-0 rounded-md border border-amber-200 bg-amber-50/80 px-3 py-2.5 text-xs text-amber-950 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-100"
             role="note"
           >
             <p style="margin: 0 0 6px; font-weight: 600">What this is</p>
@@ -280,7 +284,7 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.NoteEditor do
               phx-hook="MarkdownWorkspace"
               data-default-mode="split"
               data-mode="split"
-              class="flex min-h-0 flex-1 flex-col gap-2"
+              class="min-h-0 overflow-hidden"
             >
               <div
                 class="gen-mode-switch md-mode-switch"
@@ -312,14 +316,14 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.NoteEditor do
                   <ScIcon.icon name="eye" size={13} /> Preview
                 </button>
               </div>
-              <div data-md-panes class="min-h-0 flex-1">
-                <div data-md-editor-wrap class="flex min-h-0 min-w-0 flex-1 flex-col">
+              <div data-md-panes class="min-h-0 overflow-hidden">
+                <div data-md-editor-wrap class="min-h-0 min-w-0 overflow-hidden">
                   <textarea
                     id="project-vault-note-raw"
                     name="note_raw_content"
-                    rows={if(@expand_vertically?, do: 10, else: 12)}
+                    rows="10"
                     class={[
-                      "w-full min-h-0 flex-1 basis-0 resize-y px-3 py-2 text-sm font-mono text-gray-900 dark:text-slate-100",
+                      "w-full min-h-0 flex-1 resize-none overflow-auto px-3 py-2 text-sm font-mono text-gray-900 dark:text-slate-100",
                       "rounded border border-gray-300 bg-white dark:border-slate-600 dark:bg-slate-900"
                     ]}
                     placeholder={note_content_placeholder(@note_category)}
@@ -327,13 +331,13 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.NoteEditor do
                 </div>
                 <div
                   data-md-preview-wrap
-                  class="flex min-h-0 min-w-0 flex-1 flex-col rounded border border-gray-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-950"
+                  class="min-h-0 min-w-0 overflow-hidden rounded border border-gray-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-950"
                 >
                   <div
                     id="project-vault-md-preview"
                     data-md-preview
                     phx-update="ignore"
-                    class="markdown-preview-content min-h-0 flex-1 overflow-auto p-3 text-sm"
+                    class="markdown-preview-content min-h-0 overflow-auto p-3 text-sm"
                   >
                   </div>
                 </div>
@@ -347,7 +351,7 @@ defmodule SuchConfigDesktopWeb.Components.ProjectVault.NoteEditor do
               placeholder={note_content_placeholder(@note_category)}
             >{@note_raw_content}</textarea>
           <% end %>
-          <div class="row" style="flex-wrap: wrap">
+          <div class="row shrink-0" style="flex-wrap: wrap">
             <button type="submit" class="btn sm primary">
               Save
             </button>

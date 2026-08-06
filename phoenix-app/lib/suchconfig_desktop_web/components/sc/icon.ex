@@ -28,7 +28,7 @@ defmodule SuchConfigDesktopWeb.Sc.Icon do
     key search plus x lock eye eye-off copy user code moon sun compass diamond
     clock tag history folder folder-open file archive check minus pencil info
     fingerprint sparkles folder-kanban wand-sparkles chart-column filter folder-plus
-    book-open settings-2 columns-2 shield
+    book-open settings-2 columns-2 shield trash-2
   )
 
   @icon_files @aliases |> Map.values() |> Enum.concat(@extra_icons) |> Enum.uniq()

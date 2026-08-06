@@ -70,6 +70,8 @@ defmodule SuchConfigDesktopWeb.AppLive do
         new_folder_link_stage: :idle,
         new_folder_link_error: nil,
         new_folder_run_sentinel: false,
+        pending_link_project_path: nil,
+        pending_link_project_run_sentinel: false,
         project_info: nil,
         project_error: nil
       )
@@ -719,6 +721,14 @@ defmodule SuchConfigDesktopWeb.AppLive do
     {:noreply, socket}
   end
 
+  def handle_info(:clear_pending_link_project, socket) do
+    {:noreply,
+     assign(socket,
+       pending_link_project_path: nil,
+       pending_link_project_run_sentinel: false
+     )}
+  end
+
   defp new_session_vault_key do
     32 |> :crypto.strong_rand_bytes() |> Base.encode16(case: :lower)
   end
@@ -855,7 +865,9 @@ defmodule SuchConfigDesktopWeb.AppLive do
                     "vault_session_id" => @vault_session_id,
                     "embedded" => true,
                     "selected_folder_id" => @selected_project_id,
-                    "vault_activity_visible" => @vault_activity_visible
+                    "vault_activity_visible" => @vault_activity_visible,
+                    "pending_link_project_path" => @pending_link_project_path,
+                    "pending_link_project_run_sentinel" => @pending_link_project_run_sentinel
                   }
                 )}
               </div>
@@ -934,6 +946,7 @@ defmodule SuchConfigDesktopWeb.AppLive do
         link_stage={@new_folder_link_stage}
         link_path={@new_folder_link_path}
         link_error={@new_folder_link_error}
+        error={@project_error}
         run_sentinel_scan={@new_folder_run_sentinel}
         pro_plan?={SuchConfigDesktop.ProjectVault.security_sentinel_license_enabled?()}
       />

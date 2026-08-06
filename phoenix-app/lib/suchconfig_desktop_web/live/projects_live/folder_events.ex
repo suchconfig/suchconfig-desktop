@@ -43,7 +43,8 @@ defmodule SuchConfigDesktopWeb.ProjectsLive.FolderEvents do
        folder_name: Map.get(params, "folder_name", "") |> to_string(),
        folder_description: Map.get(params, "folder_description", "") |> to_string(),
        folder_tags: Map.get(params, "folder_tags", "") |> to_string(),
-       new_folder_run_sentinel: checkbox_checked?(params, "run_sentinel_scan")
+       new_folder_run_sentinel: checkbox_checked?(params, "run_sentinel_scan"),
+       project_error: nil
      )}
   end
 
@@ -82,10 +83,13 @@ defmodule SuchConfigDesktopWeb.ProjectsLive.FolderEvents do
 
     link_path = new_folder_link_path(socket, params)
     run_sentinel? = should_run_sentinel_on_create?(socket, params, link_path)
+    open_link_preview? = link_path_present?(link_path)
 
     case ProjectVault.create_project_folder(attrs) do
       {:ok, folder} ->
-        folder = maybe_link_new_folder(folder, link_path)
+        folder =
+          if open_link_preview?, do: folder, else: maybe_link_new_folder(folder, link_path)
+
         folders = ProjectVault.list_project_folders()
 
         socket =
@@ -100,27 +104,39 @@ defmodule SuchConfigDesktopWeb.ProjectsLive.FolderEvents do
             new_folder_link_error: nil,
             new_folder_run_sentinel: false,
             show_new_folder_modal: false,
-            project_info: create_success_info(link_path),
+            project_info: if(open_link_preview?, do: nil, else: create_success_info(link_path)),
             project_error: nil
           )
           |> Formatting.assign_project_entries()
           |> notify_projects_sync()
 
         socket =
-          if run_sentinel? and is_binary(link_path) do
+          if open_link_preview? do
             socket
             |> assign(
               current_page: :project_vault,
               selected_project_id: folder.id,
               selected_project_name: folder.name,
-              vault_activity_visible: false
+              vault_activity_visible: false,
+              pending_link_project_path: link_path,
+              pending_link_project_run_sentinel: run_sentinel?
             )
-            |> Phoenix.LiveView.push_event("invoke_sentinel_onboard", %{
-              path: link_path,
-              folder_id: folder.id
-            })
           else
-            socket
+            if run_sentinel? and is_binary(link_path) do
+              socket
+              |> assign(
+                current_page: :project_vault,
+                selected_project_id: folder.id,
+                selected_project_name: folder.name,
+                vault_activity_visible: false
+              )
+              |> Phoenix.LiveView.push_event("invoke_sentinel_onboard", %{
+                path: link_path,
+                folder_id: folder.id
+              })
+            else
+              socket
+            end
           end
 
         {:noreply, socket}
@@ -129,10 +145,14 @@ defmodule SuchConfigDesktopWeb.ProjectsLive.FolderEvents do
         {:noreply,
          assign(socket,
            project_error: ProjectVault.format_error(changeset),
-           project_info: nil
+           project_info: nil,
+           show_new_folder_modal: true
          )}
     end
   end
+
+  defp link_path_present?(path) when is_binary(path), do: String.trim(path) != ""
+  defp link_path_present?(_), do: false
 
   defp checkbox_checked?(params, key) do
     case Map.get(params, key) do

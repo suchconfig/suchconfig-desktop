@@ -5,6 +5,7 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.EntryEvents do
   import Phoenix.LiveView, only: [connected?: 1, push_event: 3]
 
   alias SuchConfigDesktop.SecretsVault
+  alias SuchConfigDesktop.SecretsVault.Item
   alias SuchConfigDesktopWeb.SecretsVaultLive.Formatting
   alias SuchConfigDesktopWeb.SecretsVaultLive.Generator
   alias SuchConfigDesktopWeb.SecretsVaultLive.TagEvents
@@ -164,19 +165,45 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.EntryEvents do
   end
 
   def copy_secret(_params, socket) do
-    copy_field_value(socket, socket.assigns.secret_body, "Copied to clipboard.")
+    summary = copy_secret_summary(socket.assigns.item_kind)
+
+    copy_field_value(
+      socket,
+      socket.assigns.secret_body,
+      "Copied to clipboard.",
+      summary,
+      "password"
+    )
   end
 
   def copy_username(_params, socket) do
-    copy_field_value(socket, socket.assigns.username, "Username copied.")
+    copy_field_value(
+      socket,
+      socket.assigns.username,
+      "Username copied.",
+      "Copied username",
+      "username"
+    )
   end
 
   def copy_public_key(_params, socket) do
-    copy_field_value(socket, socket.assigns.public_key, "Public key copied.")
+    copy_field_value(
+      socket,
+      socket.assigns.public_key,
+      "Public key copied.",
+      "Copied public key",
+      "public_key"
+    )
   end
 
   def copy_fingerprint(_params, socket) do
-    copy_field_value(socket, socket.assigns.fingerprint, "Fingerprint copied.")
+    copy_field_value(
+      socket,
+      socket.assigns.fingerprint,
+      "Fingerprint copied.",
+      "Copied fingerprint",
+      "fingerprint"
+    )
   end
 
   def save_item(params, socket) do
@@ -237,6 +264,7 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.EntryEvents do
            info: "Entry deleted.",
            error: nil
          )
+         |> clear_entry_activity()
          |> ViewData.assign_view_data(refresh_all_items: true)}
 
       {:error, _} ->
@@ -375,10 +403,13 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.EntryEvents do
            new_entry_tags: "",
            new_entry_folder_id: nil,
            entry_folder_id: folder_id,
+           item_inserted_at: item.inserted_at,
+           item_updated_at: item.updated_at,
            info: "Entry saved.",
            error: nil
          )
          |> TagEvents.load_item_tags(item, password)
+         |> assign_entry_activity(item.id)
          |> ViewData.assign_view_data(refresh_all_items: true)
          |> tap(fn s ->
            TrustedFolderEvents.broadcast_sync(s.assigns[:vault_session_id], "secrets")
@@ -415,6 +446,7 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.EntryEvents do
          error: nil
        )
        |> TagEvents.load_item_tags(item, password)
+       |> assign_entry_activity(item.id)
        |> ViewData.assign_view_data()}
     else
       _ ->
@@ -424,6 +456,8 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.EntryEvents do
            vault_panel: :detail,
            item_title: item.title,
            item_kind: Formatting.normalize_kind(item.kind),
+           entry_activity: [],
+           item_last_used_at: nil,
            error: "Could not decrypt this entry. Check your passkey."
          )}
     end
@@ -444,20 +478,59 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.EntryEvents do
       show_secret: false,
       item_inserted_at: nil,
       item_updated_at: nil,
+      entry_activity: [],
+      item_last_used_at: nil,
       item_tags: [],
       info: nil,
       error: nil
     ]
   end
 
-  defp copy_field_value(socket, value, success_message) do
+  defp copy_field_value(socket, value, success_message, activity_summary, field) do
     if socket.assigns.global_passkey_unlocked and value != "" do
-      {:noreply,
-       socket
-       |> push_event("copy_to_clipboard", %{content: value})
-       |> assign(info: success_message, error: nil)}
+      item_id = socket.assigns.selected_item_id
+
+      if is_integer(item_id) do
+        SecretsVault.record_activity(item_id, "copy", activity_summary, %{"field" => field})
+      end
+
+      socket =
+        socket
+        |> push_event("copy_to_clipboard", %{content: value})
+        |> assign(info: success_message, error: nil)
+        |> assign_entry_activity(item_id)
+
+      {:noreply, socket}
     else
       {:noreply, assign(socket, error: "Nothing to copy.")}
+    end
+  end
+
+  defp assign_entry_activity(socket, item_id) when is_integer(item_id) do
+    case SecretsVault.get_item(item_id) do
+      %Item{} = item ->
+        assign(socket,
+          entry_activity: SecretsVault.activity_display_rows(item),
+          item_last_used_at: SecretsVault.latest_copy_at(item_id)
+        )
+
+      _ ->
+        socket
+    end
+  end
+
+  defp assign_entry_activity(socket, _), do: socket
+
+  defp clear_entry_activity(socket) do
+    assign(socket, entry_activity: [], item_last_used_at: nil)
+  end
+
+  defp copy_secret_summary(kind) do
+    case Formatting.normalize_kind(kind) do
+      "api_key" -> "Copied token"
+      "ssh_key" -> "Copied passphrase"
+      "secure_note" -> "Copied note"
+      _ -> "Copied password"
     end
   end
 

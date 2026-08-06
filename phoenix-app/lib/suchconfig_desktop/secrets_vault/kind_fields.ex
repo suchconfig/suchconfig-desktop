@@ -62,6 +62,8 @@ defmodule SuchConfigDesktop.SecretsVault.KindFields do
     |> maybe_put("url", fields[:url], shows_url?(kind))
     |> maybe_put("public_key", fields[:public_key], shows_ssh_fields?(kind))
     |> maybe_put("fingerprint", fields[:fingerprint], shows_ssh_fields?(kind))
+    |> maybe_put("totp", fields[:totp], true)
+    |> maybe_put("notes", fields[:notes], true)
   end
 
   defp maybe_put(map, _key, _value, false), do: map

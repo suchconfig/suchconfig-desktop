@@ -6,6 +6,7 @@ defmodule SuchConfigDesktop.SecretsVault do
   import Ecto.Query, warn: false
 
   alias SuchConfigDesktop.Repo
+  alias SuchConfigDesktop.SecretsVault.Activity
   alias SuchConfigDesktop.SecretsVault.Folder
   alias SuchConfigDesktop.SecretsVault.Item
   alias SuchConfigDesktop.SecretsVault.Types
@@ -40,8 +41,30 @@ defmodule SuchConfigDesktop.SecretsVault do
     |> Repo.update()
   end
 
-  def delete_folder(%Folder{} = folder) do
-    Repo.delete(folder)
+  def delete_folder(%Folder{} = folder, opts \\ []) do
+    items_action = Keyword.get(opts, :items_action, :move_to_deleted_items)
+
+    cond do
+      Folder.system_folder?(folder) ->
+        {:error, :system_folder}
+
+      items_action not in [:move_to_deleted_items, :permanent_delete] ->
+        {:error, :invalid_items_action}
+
+      true ->
+        Repo.transaction(fn ->
+          case apply_folder_items_action(folder, items_action) do
+            :ok ->
+              case Repo.delete(folder) do
+                {:ok, deleted} -> deleted
+                {:error, changeset} -> Repo.rollback(changeset)
+              end
+
+            {:error, reason} ->
+              Repo.rollback(reason)
+          end
+        end)
+    end
   end
 
   def ensure_unassociated_folder do
@@ -51,7 +74,79 @@ defmodule SuchConfigDesktop.SecretsVault do
     )
   end
 
+  def ensure_deleted_items_folder do
+    ensure_system_folder(
+      Folder.deleted_items_name(),
+      "Secrets kept after their folder was deleted"
+    )
+  end
+
   def ensure_uncategorized_folder, do: ensure_unassociated_folder()
+
+  defp apply_folder_items_action(folder, :permanent_delete) do
+    from(i in Item, where: i.secrets_vault_folder_id == ^folder.id)
+    |> Repo.delete_all()
+
+    :ok
+  end
+
+  defp apply_folder_items_action(folder, :move_to_deleted_items) do
+    case ensure_deleted_items_folder() do
+      {:ok, deleted_items} ->
+        if deleted_items.id == folder.id do
+          {:error, :system_folder}
+        else
+          move_folder_items(folder, deleted_items)
+        end
+
+      {:error, _} = err ->
+        err
+    end
+  end
+
+  defp move_folder_items(folder, target_folder) do
+    items = list_items(folder.id)
+
+    Enum.reduce_while(items, :ok, fn item, :ok ->
+      title = unique_title_in_folder(target_folder.id, item.title)
+
+      case item
+           |> Item.changeset(%{
+             secrets_vault_folder_id: target_folder.id,
+             title: title
+           })
+           |> Repo.update() do
+        {:ok, _} -> {:cont, :ok}
+        {:error, changeset} -> {:halt, {:error, changeset}}
+      end
+    end)
+  end
+
+  defp unique_title_in_folder(folder_id, title) do
+    existing =
+      from(i in Item,
+        where: i.secrets_vault_folder_id == ^folder_id,
+        select: i.title
+      )
+      |> Repo.all()
+      |> MapSet.new()
+
+    if MapSet.member?(existing, title) do
+      next_unique_title(existing, title, 1)
+    else
+      title
+    end
+  end
+
+  defp next_unique_title(existing, base, n) do
+    candidate = "#{base} (#{n})"
+
+    if MapSet.member?(existing, candidate) do
+      next_unique_title(existing, base, n + 1)
+    else
+      candidate
+    end
+  end
 
   defp ensure_system_folder(name, description) do
     case Repo.get_by(Folder, name: name) do
@@ -188,6 +283,26 @@ defmodule SuchConfigDesktop.SecretsVault do
   def format_error(reason) when is_binary(reason), do: reason
   def format_error(_), do: "Operation failed."
 
+  def record_activity(item_id, action, summary, metadata \\ %{}) do
+    Activity.record(item_id, action, summary, metadata)
+  end
+
+  def list_activity(item_id, limit \\ 20) do
+    Activity.list(item_id, limit)
+  end
+
+  def latest_copy_at(item_id), do: Activity.latest_copy_at(item_id)
+
+  def activity_display_rows(item, limit \\ 20)
+
+  def activity_display_rows(%Item{} = item, limit) when is_integer(limit) do
+    Activity.display_rows(item, list_activity(item.id, limit))
+  end
+
+  def activity_display_rows(_, _), do: []
+
+  def device_label, do: Activity.device_label()
+
   defp ensure_persistence do
     cond do
       not crdt_persistence_enabled?() -> {:error, :secrets_vault_persistence_disabled}
@@ -245,7 +360,17 @@ defmodule SuchConfigDesktop.SecretsVault do
   defp normalize_frontmatter(_), do: %{}
 
   defp frontmatter_map(snap) do
-    keys = ["username", "url", "public_key", "fingerprint", "hostname", "tags", "project_ref"]
+    keys = [
+      "username",
+      "url",
+      "public_key",
+      "fingerprint",
+      "hostname",
+      "tags",
+      "project_ref",
+      "totp",
+      "notes"
+    ]
 
     fm =
       Enum.reduce(keys, %{}, fn key, acc ->
@@ -271,20 +396,30 @@ defmodule SuchConfigDesktop.SecretsVault do
          {:ok, snap} <- apply_frontmatter(snap, n.frontmatter),
          {:ok, hash} <- Crdt.snapshot_hash(snap),
          {:ok, enc_bin} <- EnvCrypto.encrypt_to_binary(password, snap) do
-      %Item{}
-      |> Item.changeset(%{
-        title: n.title,
-        kind: n.kind,
-        security_mode: n.security_mode,
-        secrets_vault_folder_id: n.secrets_vault_folder_id,
-        crdt_snapshot_encrypted: enc_bin,
-        crdt_snapshot_nonce: nil,
-        crdt_encryption_version: 1,
-        crdt_schema_version: 1,
-        crdt_snapshot_hash: hash,
-        updated_clock: System.system_time(:millisecond)
-      })
-      |> Repo.insert()
+      result =
+        %Item{}
+        |> Item.changeset(%{
+          title: n.title,
+          kind: n.kind,
+          security_mode: n.security_mode,
+          secrets_vault_folder_id: n.secrets_vault_folder_id,
+          crdt_snapshot_encrypted: enc_bin,
+          crdt_snapshot_nonce: nil,
+          crdt_encryption_version: 1,
+          crdt_schema_version: 1,
+          crdt_snapshot_hash: hash,
+          updated_clock: System.system_time(:millisecond)
+        })
+        |> Repo.insert()
+
+      case result do
+        {:ok, item} ->
+          record_activity(item.id, "create", "Created entry")
+          {:ok, item}
+
+        other ->
+          other
+      end
     else
       {:error, _} -> {:error, :encrypt_failed}
       {:error, _, _} -> {:error, :crdt_error}
@@ -305,23 +440,60 @@ defmodule SuchConfigDesktop.SecretsVault do
 
   defp do_update_item(%Item{} = item, n, password) do
     with {:ok, plain} <- EnvCrypto.decrypt_from_binary(password, item.crdt_snapshot_encrypted),
+         {:ok, prev_body} <- Crdt.body(plain),
+         {:ok, prev_fm} <- frontmatter_map(plain),
          {:ok, snap} <- Crdt.set_body(plain, n.body),
          {:ok, snap} <- apply_frontmatter(snap, n.frontmatter),
          {:ok, hash} <- Crdt.snapshot_hash(snap),
          {:ok, enc_bin} <- EnvCrypto.encrypt_to_binary(password, snap) do
-      item
-      |> Item.changeset(%{
+      previous = %{
+        title: item.title,
+        kind: item.kind,
+        secrets_vault_folder_id: item.secrets_vault_folder_id,
+        body: prev_body,
+        frontmatter: prev_fm
+      }
+
+      next = %{
         title: n.title,
         kind: n.kind,
-        security_mode: n.security_mode,
         secrets_vault_folder_id: n.secrets_vault_folder_id,
-        crdt_snapshot_encrypted: enc_bin,
-        crdt_encryption_version: 1,
-        crdt_schema_version: 1,
-        crdt_snapshot_hash: hash,
-        updated_clock: System.system_time(:millisecond)
-      })
-      |> Repo.update()
+        body: n.body,
+        frontmatter: n.frontmatter
+      }
+
+      changed = Activity.changed_fields(previous, next)
+
+      result =
+        item
+        |> Item.changeset(%{
+          title: n.title,
+          kind: n.kind,
+          security_mode: n.security_mode,
+          secrets_vault_folder_id: n.secrets_vault_folder_id,
+          crdt_snapshot_encrypted: enc_bin,
+          crdt_encryption_version: 1,
+          crdt_schema_version: 1,
+          crdt_snapshot_hash: hash,
+          updated_clock: System.system_time(:millisecond)
+        })
+        |> Repo.update()
+
+      case result do
+        {:ok, updated} ->
+          if changed != [] do
+            summary = Activity.update_summary(changed, n.kind)
+
+            record_activity(updated.id, "update", summary, %{
+              "changed_fields" => changed
+            })
+          end
+
+          {:ok, updated}
+
+        other ->
+          other
+      end
     else
       {:error, :invalid_password_or_payload} -> {:error, :invalid_password}
       {:error, _} -> {:error, :encrypt_failed}

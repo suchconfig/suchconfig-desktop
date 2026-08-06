@@ -6,6 +6,7 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEvents do
   import Phoenix.Component, only: [assign: 2]
 
   alias SuchConfigDesktop.ProjectVault
+  alias SuchConfigDesktopWeb.ProjectVaultLive.VaultItemEvents
   alias SuchConfigDesktopWeb.ProjectVaultLive.VaultItemTagEvents
   alias SuchConfigDesktopWeb.TrustedFolderEvents
 
@@ -45,7 +46,8 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEvents do
        folder_name: Map.get(params, "folder_name", "") |> to_string(),
        folder_description: Map.get(params, "folder_description", "") |> to_string(),
        folder_tags: Map.get(params, "folder_tags", "") |> to_string(),
-       new_folder_run_sentinel: checkbox_checked?(params, "run_sentinel_scan")
+       new_folder_run_sentinel: checkbox_checked?(params, "run_sentinel_scan"),
+       error: nil
      )}
   end
 
@@ -84,10 +86,13 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEvents do
 
     link_path = new_folder_link_path(socket, params)
     run_sentinel? = should_run_sentinel_on_create?(socket, params, link_path)
+    open_link_preview? = link_path_present?(link_path)
 
     case ProjectVault.create_project_folder(attrs) do
       {:ok, folder} ->
-        folder = maybe_link_new_folder(folder, link_path)
+        folder =
+          if open_link_preview?, do: folder, else: maybe_link_new_folder(folder, link_path)
+
         folders = ProjectVault.list_project_folders()
         vault_items = list_vault_items_if(socket, folder.id)
 
@@ -110,29 +115,42 @@ defmodule SuchConfigDesktopWeb.ProjectVaultLive.FolderEvents do
             new_folder_run_sentinel: false,
             show_new_folder_modal: false,
             folder_sidebar_expanded: true,
-            info: create_success_info(link_path),
+            info: if(open_link_preview?, do: nil, else: create_success_info(link_path)),
             error: nil,
             new_note_form_highlight: false
           )
           |> broadcast_projects_sync()
 
-        socket =
-          if run_sentinel? do
-            SuchConfigDesktopWeb.ProjectVaultLive.SentinelEvents.start_onboard_scan(
-              socket,
-              link_path,
-              folder.id
+        cond do
+          open_link_preview? ->
+            VaultItemEvents.open_link_project_modal_for_path(link_path, socket,
+              run_sentinel: run_sentinel?
             )
-          else
-            socket
-          end
 
-        {:noreply, socket}
+          run_sentinel? ->
+            {:noreply,
+             SuchConfigDesktopWeb.ProjectVaultLive.SentinelEvents.start_onboard_scan(
+               socket,
+               link_path,
+               folder.id
+             )}
+
+          true ->
+            {:noreply, socket}
+        end
 
       {:error, changeset} ->
-        {:noreply, assign(socket, error: ProjectVault.format_error(changeset), info: nil)}
+        {:noreply,
+         assign(socket,
+           error: ProjectVault.format_error(changeset),
+           info: nil,
+           show_new_folder_modal: true
+         )}
     end
   end
+
+  defp link_path_present?(path) when is_binary(path), do: String.trim(path) != ""
+  defp link_path_present?(_), do: false
 
   defp checkbox_checked?(params, key) do
     case Map.get(params, key) do

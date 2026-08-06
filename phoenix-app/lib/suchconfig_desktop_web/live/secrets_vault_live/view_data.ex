@@ -27,6 +27,9 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.ViewData do
 
   Vault-wide `list_items(nil)` runs only when `refresh_all_items: true`,
   `load_all_items: true`, or `all_items` was already loaded — not on every mount.
+
+  Decrypted tag maps are cached on the socket. Re-decrypt only when vault-wide
+  items are refreshed/loaded; folder switches reuse the cache.
   """
   def assign_view_data(socket, opts \\ []) do
     refresh_all_items = Keyword.get(opts, :refresh_all_items, false)
@@ -34,22 +37,16 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.ViewData do
     password = socket.assigns[:vault_password] || ""
     unlocked = socket.assigns[:global_passkey_unlocked] == true and password != ""
 
-    all_items = resolve_all_items(socket, refresh_all_items, load_all_items)
+    {all_items, all_items_refreshed?} =
+      resolve_all_items(socket, refresh_all_items, load_all_items)
+
     vault_wide_items = items_for_vault_wide(all_items, socket.assigns.items)
 
-    tags_by_item_id =
-      if unlocked do
-        Formatting.tags_by_item_id(socket.assigns.items, password)
-      else
-        %{}
-      end
-
     all_tags_by_item_id =
-      if unlocked and all_items_loaded?(all_items) do
-        Formatting.tags_by_item_id(vault_wide_items, password)
-      else
-        %{}
-      end
+      resolve_all_tags(socket, all_items, vault_wide_items, password, unlocked, all_items_refreshed?)
+
+    tags_by_item_id =
+      resolve_folder_tags(socket.assigns.items, all_tags_by_item_id, password, unlocked)
 
     filtered_items =
       Formatting.filter_items(
@@ -59,9 +56,16 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.ViewData do
         tags_by_item_id
       )
 
+    suggestion_tags =
+      if all_items_loaded?(all_items) and is_map(all_tags_by_item_id) do
+        all_tags_by_item_id
+      else
+        tags_by_item_id
+      end
+
     tag_suggestions =
       if unlocked do
-        TagEvents.tag_suggestions(vault_wide_items, password, socket.assigns[:item_tags] || [])
+        TagEvents.tag_suggestions(suggestion_tags, socket.assigns[:item_tags] || [])
       else
         []
       end
@@ -97,13 +101,21 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.ViewData do
         active_count: filter_active_count
       })
 
+    tag_count =
+      if is_map(all_tags_by_item_id) do
+        Formatting.unique_tag_count(all_tags_by_item_id)
+      else
+        0
+      end
+
     assign(socket,
       all_items: all_items,
+      all_tags_by_item_id: all_tags_by_item_id,
       tags_by_item_id: tags_by_item_id,
       filtered_items: filtered_items,
       entry_count: length(socket.assigns.items),
       filter_active_count: filter_active_count,
-      tag_count: Formatting.unique_tag_count(all_tags_by_item_id),
+      tag_count: tag_count,
       filter_type_options: filter_type_options,
       filter_tag_options: filter_tag_options,
       folder_name: folder_name,
@@ -123,17 +135,45 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.ViewData do
 
     cond do
       refresh_all_items ->
-        SecretsVault.list_items(nil)
+        {SecretsVault.list_items(nil), true}
 
       load_all_items and not all_items_loaded?(current) ->
-        SecretsVault.list_items(nil)
+        {SecretsVault.list_items(nil), true}
 
       all_items_loaded?(current) ->
-        current
+        {current, false}
 
       true ->
-        @not_loaded
+        {@not_loaded, false}
     end
+  end
+
+  defp resolve_all_tags(socket, all_items, vault_wide_items, password, unlocked, all_items_refreshed?) do
+    cached = socket.assigns[:all_tags_by_item_id]
+
+    cond do
+      not unlocked ->
+        @not_loaded
+
+      not all_items_loaded?(all_items) ->
+        @not_loaded
+
+      all_items_refreshed? or not is_map(cached) ->
+        Formatting.tags_by_item_id(vault_wide_items, password)
+
+      true ->
+        cached
+    end
+  end
+
+  defp resolve_folder_tags(_items, _all_tags, _password, false), do: %{}
+
+  defp resolve_folder_tags(items, all_tags, _password, true) when is_map(all_tags) do
+    Map.new(items, fn item -> {item.id, Map.get(all_tags, item.id, [])} end)
+  end
+
+  defp resolve_folder_tags(items, _all_tags, password, true) do
+    Formatting.tags_by_item_id(items, password)
   end
 
   defp all_items_loaded?(items), do: is_list(items)

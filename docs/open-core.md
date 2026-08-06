@@ -13,7 +13,7 @@ SuchConfig is a **local-first Project Vault + Secrets Vault**. Configs and crede
 | Project Vault + Secrets Vault + `.suchvault` archives | Offline CRDT-backed store; still evolving |
 | Trusted Folder | Encrypted snapshots to a folder you own (iCloud / Dropbox / NAS / USB) |
 | LAN Wi‑Fi P2P | Opt-in same-LAN sync; pairing + Handoff verified; incremental deltas still in progress |
-| Vault Importer | Planned Free on-device import — **not** in this alpha |
+| Vault Importer | Free on-device import; first password-manager JSON path dogfood-ready; more formats planned |
 
 ## What this repo is
 
@@ -31,6 +31,6 @@ SuchConfig is a **local-first Project Vault + Secrets Vault**. Configs and crede
 
 ## Maturity
 
-Public Alpha tag: **`v1.0.0-alpha.6`**. See [public-alpha-roadmap.md](./public-alpha-roadmap.md). Platform: **macOS primary**; Linux/Windows best-effort.
+Public Alpha tag: **`v1.0.0-alpha.7`**. See [public-alpha-roadmap.md](./public-alpha-roadmap.md). Platform: **macOS primary**; Linux/Windows best-effort.
 
 Pricing / Stripe storefront stays hidden during alpha; Free download + this GitHub tree are the public surface.

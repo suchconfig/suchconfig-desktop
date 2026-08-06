@@ -36,6 +36,6 @@ defmodule SuchConfigDesktop.EnvManager.ProjectFolder do
       :broker_services
     ])
     |> validate_required([:name])
-    |> unique_constraint(:name)
+    |> unique_constraint(:name, message: "already exists")
   end
 end

@@ -114,6 +114,10 @@ defmodule SuchConfigDesktopWeb.SecretsVaultLive.Passkey do
        public_key: "",
        fingerprint: "",
        show_secret: false,
+       all_items: ViewData.not_loaded(),
+       all_tags_by_item_id: ViewData.not_loaded(),
+       tags_by_item_id: %{},
+       tag_suggestions: [],
        info: "Global Passkey locked.",
        error: nil
      )}
