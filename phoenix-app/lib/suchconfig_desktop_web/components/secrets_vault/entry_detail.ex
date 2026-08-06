@@ -343,6 +343,10 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.EntryDetail do
   attr :multiline, :boolean, default: false
   attr :copy_event, :string, default: nil
   attr :copy_button_id, :string, default: nil
+  attr :autocomplete, :string, default: nil
+  attr :autocorrect, :string, default: nil
+  attr :autocapitalize, :string, default: nil
+  attr :spellcheck, :string, default: nil
 
   defp form_text_field(assigns) do
     ~H"""
@@ -350,9 +354,26 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.EntryDetail do
       <div class="field-label"><span>{@label}</span></div>
       <div class={["field-row", !@mono && !@multiline && "plain"]}>
         <%= if @multiline do %>
-          <textarea id={@id} name={@name} rows={5}>{@value}</textarea>
+          <textarea
+            id={@id}
+            name={@name}
+            rows={5}
+            autocomplete={@autocomplete}
+            autocorrect={@autocorrect}
+            autocapitalize={@autocapitalize}
+            spellcheck={@spellcheck}
+          >{@value}</textarea>
         <% else %>
-          <input type="text" id={@id} name={@name} value={@value} />
+          <input
+            type="text"
+            id={@id}
+            name={@name}
+            value={@value}
+            autocomplete={@autocomplete}
+            autocorrect={@autocorrect}
+            autocapitalize={@autocapitalize}
+            spellcheck={@spellcheck}
+          />
         <% end %>
         <button
           :if={@copy_event}

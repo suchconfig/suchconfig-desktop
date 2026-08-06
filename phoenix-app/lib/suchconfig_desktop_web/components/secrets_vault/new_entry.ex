@@ -278,7 +278,9 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.NewEntry do
   attr :placeholder, :string, default: nil
   attr :mono, :boolean, default: false
   attr :autocomplete, :string, default: nil
+  attr :autocorrect, :string, default: nil
   attr :autocapitalize, :string, default: nil
+  attr :spellcheck, :string, default: nil
 
   defp modal_text_field(assigns) do
     ~H"""
@@ -292,7 +294,9 @@ defmodule SuchConfigDesktopWeb.Components.SecretsVault.NewEntry do
           value={@value}
           placeholder={@placeholder}
           autocomplete={@autocomplete}
+          autocorrect={@autocorrect}
           autocapitalize={@autocapitalize}
+          spellcheck={@spellcheck}
         />
       </div>
     </div>
