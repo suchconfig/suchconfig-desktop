@@ -4,7 +4,7 @@
 
 # SuchConfig
 
-**Public Alpha** (`v1.0.0-alpha.7`) — local-first Project Vault + Secrets Vault.
+**Public Alpha** (`v1.0.0-alpha.8`) — local-first Project Vault + Secrets Vault.
 
 **Your local-first source of truth for configs, secrets, and teams.**
 

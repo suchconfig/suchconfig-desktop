@@ -5,6 +5,16 @@ All notable changes to SuchConfig (public CE) are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning follows [Semantic Versioning](https://semver.org/) with Public Alpha pre-release tags (`v1.0.0-alpha.N`).
 
+## [1.0.0-alpha.8] — 2026-08-06
+
+### Fixed
+
+- Secrets Vault text fields: declare and forward `autocomplete` / `autocorrect` / `autocapitalize` / `spellcheck` on entry detail and new-entry components so `mix compile --warnings-as-errors` succeeds in CI
+
+### Changed
+
+- Public CI workflow: add `workflow_dispatch` so founders can run CI from the Actions UI when needed
+
 ## [1.0.0-alpha.7] — 2026-08-06
 
 ### Added
@@ -84,6 +94,7 @@ Versioning follows [Semantic Versioning](https://semver.org/) with Public Alpha 
 - Pricing page on suchconfig.io remains hidden during Public Alpha
 - macOS is the primary supported platform; Linux / Windows are best-effort
 
+[1.0.0-alpha.8]: https://github.com/suchconfig/suchconfig-app/releases/tag/v1.0.0-alpha.8
 [1.0.0-alpha.7]: https://github.com/suchconfig/suchconfig-app/releases/tag/v1.0.0-alpha.7
 [1.0.0-alpha.6]: https://github.com/suchconfig/suchconfig-app/releases/tag/v1.0.0-alpha.6
 [1.0.0-alpha.5]: https://github.com/suchconfig/suchconfig-app/releases/tag/v1.0.0-alpha.5

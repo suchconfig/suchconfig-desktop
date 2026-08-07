@@ -31,6 +31,6 @@ SuchConfig is a **local-first Project Vault + Secrets Vault**. Configs and crede
 
 ## Maturity
 
-Public Alpha tag: **`v1.0.0-alpha.7`**. See [public-alpha-roadmap.md](./public-alpha-roadmap.md). Platform: **macOS primary**; Linux/Windows best-effort.
+Public Alpha tag: **`v1.0.0-alpha.8`**. See [public-alpha-roadmap.md](./public-alpha-roadmap.md). Platform: **macOS primary**; Linux/Windows best-effort.
 
 Pricing / Stripe storefront stays hidden during alpha; Free download + this GitHub tree are the public surface.
